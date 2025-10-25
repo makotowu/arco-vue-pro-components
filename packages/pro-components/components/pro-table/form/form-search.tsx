@@ -331,6 +331,10 @@ export default defineComponent({
       }
     };
 
+    function getFieldsValues() {
+      return formModel.value;
+    }
+
     onMounted(() => {
       // 首次加载带上查询
       if (props.type === 'table') {
@@ -342,6 +346,7 @@ export default defineComponent({
       if (typeof props.formRef === 'function' && formSearchRef.value) {
         formSearchRef.value.submit = onSubmit;
         formSearchRef.value.reset = onReset;
+        formSearchRef.value.getFieldsValues = getFieldsValues;
         props.formRef(formSearchRef.value);
       }
     });
@@ -435,12 +440,16 @@ export default defineComponent({
                 ? item.valueType({})
                 : item.valueType;
             const hidden = valueType === 'hidden';
+            const formItemProps =
+              typeof item.formItemProps === 'function'
+                ? item.formItemProps({ formModel, item, type: props.type })
+                : item.formItemProps;
             return (
               <GridItem key={key} hidden={hidden} {...item.girdItemProps}>
                 <FormItem
                   {...(isForm.value
-                    ? item.formItemProps
-                    : omit(item.formItemProps, [
+                    ? formItemProps
+                    : omit(formItemProps, [
                         'rules',
                         'disabled',
                         'required',
@@ -523,7 +532,7 @@ export default defineComponent({
         form: formSearchRef,
         showCollapseButton,
       };
-      let dom = null;
+      let dom: any = null;
       if (searchConfig.value.optionRender || slots?.['option-render']) {
         if (slots?.['option-render']) {
           dom = slots?.['option-render'](optionProps);
@@ -562,12 +571,11 @@ export default defineComponent({
           }
     );
     const formProps = computed(() => {
-      return isForm.value
-        ? searchConfig.value.formProps
-        : omit(searchConfig.value.formProps || {}, [
-            'rules',
-            'disabled',
-          ]);
+      const data =
+        typeof searchConfig.value.formProps === 'function'
+          ? searchConfig.value.formProps({ formModel, type: props.type })
+          : searchConfig.value.formProps;
+      return isForm.value ? data : omit(data || {}, ['rules', 'disabled']);
     });
     const render = () => (
       <Form

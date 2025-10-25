@@ -1,5 +1,5 @@
 import { defineComponent, ref } from 'vue';
-import { Link } from '@arco-design/web-vue';
+import { Button, Modal, Link } from '@arco-design/web-vue';
 import type {
   ActionType,
   ProColumns,
@@ -67,6 +67,12 @@ export default defineComponent({
     const setActionRef = (ref: ActionType) => {
       actionRef.value = ref;
     };
+    const visible = ref(false);
+    const current = ref({});
+    const handleClick = (record) => {
+      visible.value = true;
+      current.value = JSON.parse(JSON.stringify(record));
+    };
     const columns: ProColumns[] = [
       {
         title: (_, type) => {
@@ -76,8 +82,23 @@ export default defineComponent({
         dataIndex: 'name',
         fixed: 'left',
         render: (data: RenderData) => <Link>{data.dom}</Link>,
-        formItemProps: {
-          labelColFlex: 'none', // 长label不换行
+        formItemProps: ({ formModel, type }) => {
+          if (type === 'form') {
+            return {
+              disabled:
+                formModel.value.key && formModel.value.name ? true : false, // 不能编辑
+              rules: [
+                {
+                  required: true,
+                  message: '此项为必填项',
+                },
+              ],
+            };
+          } else {
+            return {
+              labelColFlex: 'none', // 长label不换行
+            };
+          }
         },
       },
       {
@@ -136,9 +157,21 @@ export default defineComponent({
         dataIndex: 'option',
         valueType: 'option',
         hideInSearch: true,
+        hideInForm: true,
         fixed: 'right',
-        render: () => {
-          return [<Link key="link">链路</Link>];
+        render: ({ record }) => {
+          return [
+            <Button
+              type="text"
+              onClick={(event) => {
+                event.stopPropagation();
+                event.preventDefault();
+                handleClick(record);
+              }}
+            >
+              编辑
+            </Button>,
+          ];
         },
       },
     ];
@@ -151,55 +184,94 @@ export default defineComponent({
         expandedKeys.value
       );
       return (
-        <ProTable
-          columns={columns}
-          rowSelection={{
-            type: 'checkbox',
-            showCheckedAll: true,
-            checkStrictly: true,
-          }}
-          actionRef={setActionRef}
-          request={(params) => {
-            console.log('request reload', params);
-            return Promise.resolve({
-              data: tableListDataSource,
-              total: 10,
-              success: true,
-            });
-          }}
-          scroll={{ x: 1300 }}
-          onSelectAll={(checked: boolean) => {
-            console.log('onSelectAll', checked);
-          }}
-          onSelect={(rowKeys, rowKey, record) => {
-            console.log(
-              'onSelect:rowKeys:%o,rowKey:%o,record:%o',
-              rowKeys,
-              rowKey,
-              record
-            );
-          }}
-          v-model:selectedKeys={selectedKeys.value}
-          v-model:expandedKeys={expandedKeys.value}
-          rowKey="key"
-          headerTitle={({
-            selectedRowKeys,
-            selectedRows,
-            action,
-          }: ToolBarData<any>) => {
-            return (
-              <Link
-                href={encodeURI(
-                  'https://gitee.com/li-cailing/arco-vue-pro-components/blob/main/packages/pro-components/components/pro-table/README.md#默认表格可互动-demo'
-                )}
-                target="_blank"
-              >
-                默认示例(可互动)[查看源代码]
-              </Link>
-            );
-          }}
-          {...props}
-        />
+        <div>
+          <ProTable
+            columns={columns}
+            rowSelection={{
+              type: 'checkbox',
+              showCheckedAll: true,
+              checkStrictly: true,
+            }}
+            actionRef={setActionRef}
+            request={(params) => {
+              console.log('request reload', params);
+              return Promise.resolve({
+                data: tableListDataSource,
+                total: 10,
+                success: true,
+              });
+            }}
+            scroll={{ x: 1300 }}
+            onSelectAll={(checked: boolean) => {
+              console.log('onSelectAll', checked);
+            }}
+            onSelect={(rowKeys, rowKey, record) => {
+              console.log(
+                'onSelect:rowKeys:%o,rowKey:%o,record:%o',
+                rowKeys,
+                rowKey,
+                record
+              );
+            }}
+            v-model:selectedKeys={selectedKeys.value}
+            v-model:expandedKeys={expandedKeys.value}
+            rowKey="key"
+            headerTitle={({
+              selectedRowKeys,
+              selectedRows,
+              action,
+            }: ToolBarData<any>) => {
+              return (
+                <Link
+                  href={encodeURI(
+                    'https://gitee.com/li-cailing/arco-vue-pro-components/blob/main/packages/pro-components/components/pro-table/README.md#默认表格可互动-demo'
+                  )}
+                  target="_blank"
+                >
+                  默认示例(可互动)[查看源代码]
+                </Link>
+              );
+            }}
+            {...props}
+          />
+          <Modal
+            titleAlign="start"
+            title="arco-pro TableList组件有封装完整的(新增|编辑)弹框"
+            v-model:visible={visible.value}
+            draggable
+            unmountOnClose
+            maskClosable={false}
+            footer={false}
+            width="80%"
+          >
+            <ProTable
+              columns={columns}
+              type="form"
+              defaultFormData={current.value}
+              search={{
+                formProps: ({ formModel }) => {
+                  return {
+                    layout: 'horizontal',
+                    autoLabelWidth: true,
+                    rules: {
+                      containers: [
+                        {
+                          required: formModel.value.key ? true : false,
+                          message: '此项为必填项',
+                        },
+                      ],
+                    },
+                  };
+                },
+                gridProps: {
+                  cols: 2,
+                  rowGap: 20,
+                  colGap: 20,
+                },
+              }}
+            />
+          </Modal>
+        </div>
       );
     };
     return {

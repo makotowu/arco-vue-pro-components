@@ -5,8 +5,6 @@ import {
   VNodeTypes,
   CSSProperties,
   RenderFunction,
-  Slots,
-  Slot,
 } from 'vue';
 import type {
   GridItemProps,
@@ -14,10 +12,10 @@ import type {
   GridProps,
   Size,
   TableColumnData,
-  FormInstance
+  FormInstance,
 } from '@arco-design/web-vue';
 import { TriggerEvent, TriggerPosition } from '../_utils/constant';
-import { ClassName, Data } from '../_utils/types';
+import { Data } from '../_utils/types';
 
 /**
  * @zh 表格类型
@@ -75,19 +73,19 @@ export type ProColumnsValueTypeFunction<T> = (
 
 export type ValueEnumObj = {
   [key: string]:
-    | {
-        text: VNodeTypes;
-        status: StatusType;
-      }
-    | VNodeTypes;
+  | {
+    text: VNodeTypes;
+    status: StatusType;
+  }
+  | VNodeTypes;
 };
 
 export type ValueEnumMap = Map<
   any,
   | {
-      text: VNodeChild;
-      status: StatusType;
-    }
+    text: VNodeChild;
+    status: StatusType;
+  }
   | VNodeChild
 >;
 
@@ -96,10 +94,10 @@ export type ColumnsState = {
   fixed?: 'right' | 'left' | undefined;
   order?: number;
   disable?:
-    | boolean
-    | {
-        checkbox: boolean;
-      };
+  | boolean
+  | {
+    checkbox: boolean;
+  };
 };
 
 export type ColumnStateType = {
@@ -113,6 +111,16 @@ export type ColumnStateType = {
   /** 持久化的key，用于存储到 storage 中 */
   persistenceKey?: string;
 };
+
+export interface FormItemPropsData {
+  formModel: Ref;
+  item: ProColumns;
+  type: ProTableTypes;
+}
+export interface FormPropsData {
+  formModel: Ref;
+  type: ProTableTypes;
+}
 
 /**
  * @zh pro-table columns继承arco-design-vue组件table的columns
@@ -147,7 +155,9 @@ export interface ProColumns
    * @zh 传递给查询表单项a-form-item的配置
    * @en The configuration passed to the query form entry a-form-item
    */
-  formItemProps?: { [prop: string]: any };
+  formItemProps?:
+  | ((data: FormItemPropsData) => { [prop: string]: any })
+  | { [prop: string]: any };
   /**
    * @zh 传递给a-form-item的field的配置
    * @en The configuration passed to the query form entry a-form-item field
@@ -250,9 +260,9 @@ export interface ProColumns
    * @en Column header
    */
   title?:
-    | string
-    | VNodeChild
-    | ((item: ProColumns, type: ProTableTypes) => VNodeChild);
+  | string
+  | VNodeChild
+  | ((item: ProColumns, type: ProTableTypes) => VNodeChild);
   /**
    * @zh 不在配置工具中显示
    * @en hide in tool bar column setting
@@ -519,13 +529,13 @@ export type UseFetchProps = {
   data?: any;
   loading: UseFetchDataAction['loading'];
   pageInfo:
-    | {
-        current?: number;
-        pageSize?: number;
-        defaultCurrent?: number;
-        defaultPageSize?: number;
-      }
-    | false;
+  | {
+    current?: number;
+    pageSize?: number;
+    defaultCurrent?: number;
+    defaultPageSize?: number;
+  }
+  | false;
   effects?: any[];
 };
 export type DensitySize = 'small' | 'default' | 'middle' | undefined;
@@ -701,10 +711,10 @@ export interface ToolBarProps<T = unknown> {
    * @en tool bar title
    */
   headerTitle?:
-    | string
-    | boolean
-    | VNode
-    | ((data: ToolBarData<T>) => VNodeTypes);
+  | string
+  | boolean
+  | VNode
+  | ((data: ToolBarData<T>) => VNodeTypes);
   /**
    * @zh 自定义工具栏右侧操作按钮,为false则不显示工具栏
    * @en Custom tool bar
@@ -720,8 +730,8 @@ export interface ToolBarProps<T = unknown> {
    * @en Custom tool bar right option-render
    */
   optionsRender?:
-    | false
-    | ((props: ToolBarProps<T>, defaultDom: Element[]) => VNodeTypes[]);
+  | false
+  | ((props: ToolBarProps<T>, defaultDom: Element[]) => VNodeTypes[]);
   /**
    * @zh 表格action方法
    * @en table action
@@ -912,7 +922,9 @@ export interface SearchConfig {
   /**
    * 设置搜索表单的Form props
    */
-  formProps?: Omit<FormInstance, "model" | "scrollToFirstError">;
+  formProps?:
+  | ((data: FormPropsData) => Omit<FormInstance, 'model' | 'scrollToFirstError'>)
+  | Omit<FormInstance, 'model' | 'scrollToFirstError'>;
   optionRender?: ((props: FormOptionProps) => VNodeTypes) | false;
 }
 export type StatusType = {
@@ -992,12 +1004,12 @@ export interface TableSortable {
    * @en Sorting function. Set to `true` to turn off internal sorting. Version 2.19.0 modifies outgoing data.
    */
   sorter?:
-    | ((
-        a: TableData,
-        b: TableData,
-        extra: { dataIndex: string; direction: 'ascend' | 'descend' }
-      ) => number)
-    | boolean;
+  | ((
+    a: TableData,
+    b: TableData,
+    extra: { dataIndex: string; direction: 'ascend' | 'descend' }
+  ) => number)
+  | boolean;
   /**
    * @zh 排序方向
    * @en Sort direction
@@ -1315,10 +1327,10 @@ export interface VirtualListProps {
 export declare type ScrollOptions =
   | number
   | {
-      index?: number;
-      key?: VirtualItemKey;
-      align?: 'auto' | 'top' | 'bottom';
-    };
+    index?: number;
+    key?: VirtualItemKey;
+    align?: 'auto' | 'top' | 'bottom';
+  };
 export interface VirtualListRef {
   scrollTo: (options: ScrollOptions) => void;
 }
@@ -1349,11 +1361,11 @@ export interface TriggerProps {
   popupStyle?: CSSProperties;
   animationName?: string;
   duration?:
-    | number
-    | {
-        enter: number;
-        leave: number;
-      };
+  | number
+  | {
+    enter: number;
+    leave: number;
+  };
   mouseEnterDelay?: number;
   mouseLeaveDelay?: number;
   focusDelay?: number;
@@ -1367,10 +1379,10 @@ export interface TriggerProps {
 
 export type AlertRenderType =
   | ((props: {
-      selectedRowKeys: any[];
-      selectedRows: any[];
-      onCleanSelected: () => void;
-    }) => VNode)
+    selectedRowKeys: any[];
+    selectedRows: any[];
+    onCleanSelected: () => void;
+  }) => VNode)
   | false;
 
 export type TableAlertProps = {

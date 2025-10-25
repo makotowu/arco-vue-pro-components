@@ -439,9 +439,6 @@ export default defineComponent({
     draggable: {
       type: Object as PropType<TableDraggable>,
     },
-    rowNumber: {
-      type: [Boolean, Object],
-    },
     /**
      * @zh 是否允许调整列宽
      * @en Whether to allow the column width to be adjusted
