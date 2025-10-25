@@ -129,7 +129,7 @@ description: pro-table component based on arco-design web-vue table package
 |order|column sort|`number`|`-`|
 |key|The key of the data row|`string`|`-`|
 |children|Header sub-data, used for header grouping|`ProColumns[]`|`-`|
-|formItemProps|The configuration passed to the query form entry a-form-item|`{ [prop: string]: any }`|`-`|
+|formItemProps|The configuration passed to the query form entry a-form-item|`((data: FormItemPropsData) => { [prop: string]: any })  \| { [prop: string]: any }`|`-`|
 |fieldProps|The configuration passed to the query form entry a-form-item field|`{ [prop: string]: any }`|`-`|
 |girdItemProps|The configuration passed to the query form a-grid-item|`GridItemProps`|`-`|
 |defaultValue|query form default value|`any`|`-`|
@@ -148,7 +148,7 @@ description: pro-table component based on arco-design web-vue table package
 |onFilter|Filter the form, use the built-in ProTable when it is true, turn off local filtering when it is false|`boolean \| ((value: any, record: any) => boolean)`|`-`|
 |defaultFilteredValue|Filter default value|`string[]`|`-`|
 |defaultSortOrder|Sorter default value|`'ascend' \| 'descend' \| ''`|`-`|
-|title|Column header|`string    \| VNodeChild    \| ((item: ProColumns, type: ProTableTypes) => VNodeChild)`|`-`|
+|title|Column header|`string  \| VNodeChild  \| ((item: ProColumns, type: ProTableTypes) => VNodeChild)`|`-`|
 |hideInSetting|hide in tool bar column setting|`boolean`|`false`|
 |disable|tool bar column setting disabled|`boolean`|`false`|
 
@@ -211,10 +211,10 @@ description: pro-table component based on arco-design web-vue table package
 
 |Name|Description|Type|Default|
 |---|---|---|:---:|
-|headerTitle|tool bar title|`string    \| boolean    \| VNode    \| ((data: ToolBarData<T>) => VNodeTypes)`|`-`|
+|headerTitle|tool bar title|`string  \| boolean  \| VNode  \| ((data: ToolBarData<T>) => VNodeTypes)`|`-`|
 |toolBarRender|Custom tool bar|`false \| ((data: ToolBarData<T>) => VNodeTypes[])`|`-`|
 |options|Custom tool bar right options|`OptionConfig \| boolean`|`-`|
-|optionsRender|Custom tool bar right option-render|`false    \| ((props: ToolBarProps<T>, defaultDom: Element[]) => VNodeTypes[])`|`-`|
+|optionsRender|Custom tool bar right option-render|`false  \| ((props: ToolBarProps<T>, defaultDom: Element[]) => VNodeTypes[])`|`-`|
 |action|table action|`ActionType`|`-`|
 |selectedRowKeys|Table selected row keys array|`(string \| number)[]`|`-`|
 |selectedRows|Table selected row array|`any[]`|`-`|
@@ -265,7 +265,7 @@ description: pro-table component based on arco-design web-vue table package
 |collapsed|是否收起|`boolean`|`false`|
 |onCollapse|收起按钮的事件|`(collapsed: boolean) => void`|`-`|
 |submitText|提交按钮的文本|`string`|`-`|
-|formProps|设置搜索表单的Form props|`Omit<FormInstance, "model" \| "scrollToFirstError">`|`-`|
+|formProps|设置搜索表单的Form props|`((data: FormPropsData) => Omit<FormInstance, 'model' \| 'scrollToFirstError'>)  \| Omit<FormInstance, 'model' \| 'scrollToFirstError'>`|`-`|
 
 
 
@@ -286,7 +286,7 @@ description: pro-table component based on arco-design web-vue table package
 |Name|Description|Type|Default|
 |---|---|---|:---:|
 |sortDirections|Supported sort direction|`('ascend' \| 'descend')[]`|`-`|
-|sorter|Sorting function. Set to `true` to turn off internal sorting. Version 2.19.0 modifies outgoing data.|`((        a: TableData,        b: TableData,        extra: { dataIndex: string; direction: 'ascend' \| 'descend' }      ) => number)    \| boolean`|`-`|
+|sorter|Sorting function. Set to `true` to turn off internal sorting. Version 2.19.0 modifies outgoing data.|`((    a: TableData,    b: TableData,    extra: { dataIndex: string; direction: 'ascend' \| 'descend' }  ) => number)  \| boolean`|`-`|
 |sortOrder|Sort direction|`'ascend' \| 'descend' \| ''`|`-`|
 |defaultSortOrder|Default sort direction (uncontrolled mode)|`'ascend' \| 'descend' \| ''`|`-`|
 
@@ -389,7 +389,7 @@ description: pro-table component based on arco-design web-vue table package
 ### basic table [demo](https://licailing.github.io/arco-vue-pro-components/?path=/story/pro-table--basic-demo)
 ```tsx
 import { defineComponent, ref } from 'vue';
-import { Link } from '@arco-design/web-vue';
+import { Button, Modal, Link } from '@arco-design/web-vue';
 import type {
   ActionType,
   ProColumns,
@@ -457,6 +457,12 @@ export default defineComponent({
     const setActionRef = (ref: ActionType) => {
       actionRef.value = ref;
     };
+    const visible = ref(false);
+    const current = ref({});
+    const handleClick = (record) => {
+      visible.value = true;
+      current.value = JSON.parse(JSON.stringify(record));
+    };
     const columns: ProColumns[] = [
       {
         title: (_, type) => {
@@ -466,8 +472,23 @@ export default defineComponent({
         dataIndex: 'name',
         fixed: 'left',
         render: (data: RenderData) => <Link>{data.dom}</Link>,
-        formItemProps: {
-          labelColFlex: 'none', // 长label不换行
+        formItemProps: ({ formModel, type }) => {
+          if (type === 'form') {
+            return {
+              disabled:
+                formModel.value.key && formModel.value.name ? true : false, // 不能编辑
+              rules: [
+                {
+                  required: true,
+                  message: '此项为必填项',
+                },
+              ],
+            };
+          } else {
+            return {
+              labelColFlex: 'none', // 长label不换行
+            };
+          }
         },
       },
       {
@@ -526,9 +547,21 @@ export default defineComponent({
         dataIndex: 'option',
         valueType: 'option',
         hideInSearch: true,
+        hideInForm: true,
         fixed: 'right',
-        render: () => {
-          return [<Link key="link">链路</Link>];
+        render: ({ record }) => {
+          return [
+            <Button
+              type="text"
+              onClick={(event) => {
+                event.stopPropagation();
+                event.preventDefault();
+                handleClick(record);
+              }}
+            >
+              编辑
+            </Button>,
+          ];
         },
       },
     ];
@@ -541,55 +574,94 @@ export default defineComponent({
         expandedKeys.value
       );
       return (
-        <ProTable
-          columns={columns}
-          rowSelection={{
-            type: 'checkbox',
-            showCheckedAll: true,
-            checkStrictly: true,
-          }}
-          actionRef={setActionRef}
-          request={(params) => {
-            console.log('request reload', params);
-            return Promise.resolve({
-              data: tableListDataSource,
-              total: 10,
-              success: true,
-            });
-          }}
-          scroll={{ x: 1300 }}
-          onSelectAll={(checked: boolean) => {
-            console.log('onSelectAll', checked);
-          }}
-          onSelect={(rowKeys, rowKey, record) => {
-            console.log(
-              'onSelect:rowKeys:%o,rowKey:%o,record:%o',
-              rowKeys,
-              rowKey,
-              record
-            );
-          }}
-          v-model:selectedKeys={selectedKeys.value}
-          v-model:expandedKeys={expandedKeys.value}
-          rowKey="key"
-          headerTitle={({
-            selectedRowKeys,
-            selectedRows,
-            action,
-          }: ToolBarData<any>) => {
-            return (
-              <Link
-                href={encodeURI(
-                  'https://gitee.com/li-cailing/arco-vue-pro-components/blob/main/packages/pro-components/components/pro-table/README.md#默认表格可互动-demo'
-                )}
-                target="_blank"
-              >
-                默认示例(可互动)[查看源代码]
-              </Link>
-            );
-          }}
-          {...props}
-        />
+        <div>
+          <ProTable
+            columns={columns}
+            rowSelection={{
+              type: 'checkbox',
+              showCheckedAll: true,
+              checkStrictly: true,
+            }}
+            actionRef={setActionRef}
+            request={(params) => {
+              console.log('request reload', params);
+              return Promise.resolve({
+                data: tableListDataSource,
+                total: 10,
+                success: true,
+              });
+            }}
+            scroll={{ x: 1300 }}
+            onSelectAll={(checked: boolean) => {
+              console.log('onSelectAll', checked);
+            }}
+            onSelect={(rowKeys, rowKey, record) => {
+              console.log(
+                'onSelect:rowKeys:%o,rowKey:%o,record:%o',
+                rowKeys,
+                rowKey,
+                record
+              );
+            }}
+            v-model:selectedKeys={selectedKeys.value}
+            v-model:expandedKeys={expandedKeys.value}
+            rowKey="key"
+            headerTitle={({
+              selectedRowKeys,
+              selectedRows,
+              action,
+            }: ToolBarData<any>) => {
+              return (
+                <Link
+                  href={encodeURI(
+                    'https://gitee.com/li-cailing/arco-vue-pro-components/blob/main/packages/pro-components/components/pro-table/README.md#默认表格可互动-demo'
+                  )}
+                  target="_blank"
+                >
+                  默认示例(可互动)[查看源代码]
+                </Link>
+              );
+            }}
+            {...props}
+          />
+          <Modal
+            titleAlign="start"
+            title="arco-pro TableList组件有封装完整的(新增|编辑)弹框"
+            v-model:visible={visible.value}
+            draggable
+            unmountOnClose
+            maskClosable={false}
+            footer={false}
+            width="80%"
+          >
+            <ProTable
+              columns={columns}
+              type="form"
+              defaultFormData={current.value}
+              search={{
+                formProps: ({ formModel }) => {
+                  return {
+                    layout: 'horizontal',
+                    autoLabelWidth: true,
+                    rules: {
+                      containers: [
+                        {
+                          required: formModel.value.key ? true : false,
+                          message: '此项为必填项',
+                        },
+                      ],
+                    },
+                  };
+                },
+                gridProps: {
+                  cols: 2,
+                  rowGap: 20,
+                  colGap: 20,
+                },
+              }}
+            />
+          </Modal>
+        </div>
       );
     };
     return {

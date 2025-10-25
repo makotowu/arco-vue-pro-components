@@ -127,7 +127,7 @@ description: 基于arco-design web-vue 的table封装的pro-table组件
 |order|列排序|`number`|`-`|
 |key|数据行的key|`string`|`-`|
 |children|表头子数据，用于表头分组|`ProColumns[]`|`-`|
-|formItemProps|传递给查询表单项a-form-item的配置|`{ [prop: string]: any }`|`-`|
+|formItemProps|传递给查询表单项a-form-item的配置|`((data: FormItemPropsData) => { [prop: string]: any })  \| { [prop: string]: any }`|`-`|
 |fieldProps|传递给a-form-item的field的配置|`{ [prop: string]: any }`|`-`|
 |girdItemProps|传递给查询表单a-grid-item的配置|`GridItemProps`|`-`|
 |defaultValue|查询表单的默认值|`any`|`-`|
@@ -146,7 +146,7 @@ description: 基于arco-design web-vue 的table封装的pro-table组件
 |onFilter|筛选表单，为 true 时使用 ProTable 自带的，为 false 时关闭本地筛选|`boolean \| ((value: any, record: any) => boolean)`|`-`|
 |defaultFilteredValue|筛选默认值|`string[]`|`-`|
 |defaultSortOrder|排序默认值|`'ascend' \| 'descend' \| ''`|`-`|
-|title|列标题|`string    \| VNodeChild    \| ((item: ProColumns, type: ProTableTypes) => VNodeChild)`|`-`|
+|title|列标题|`string  \| VNodeChild  \| ((item: ProColumns, type: ProTableTypes) => VNodeChild)`|`-`|
 |hideInSetting|不在配置工具中显示|`boolean`|`false`|
 |disable|列设置的 disabled|`boolean`|`false`|
 
@@ -209,10 +209,10 @@ description: 基于arco-design web-vue 的table封装的pro-table组件
 
 |参数名|描述|类型|默认值|
 |---|---|---|:---:|
-|headerTitle|工具栏 标题,为false不显示|`string    \| boolean    \| VNode    \| ((data: ToolBarData<T>) => VNodeTypes)`|`-`|
+|headerTitle|工具栏 标题,为false不显示|`string  \| boolean  \| VNode  \| ((data: ToolBarData<T>) => VNodeTypes)`|`-`|
 |toolBarRender|自定义工具栏右侧操作按钮,为false则不显示工具栏|`false \| ((data: ToolBarData<T>) => VNodeTypes[])`|`-`|
 |options|配置工具栏右侧表格操作按钮是否显示及图标,为false不显示,可配置以下按钮显不显示：reload(刷新)\|density(表格密度)\|setting(列设置)\|fullScreen(全屏 默认不显示)|`OptionConfig \| boolean`|`-`|
-|optionsRender|自定义工具栏右侧表格操作按钮,为false则显示默认：reload(刷新)\|density(表格密度)\|setting(列设置)\|fullScreen(全屏 默认不显示)|`false    \| ((props: ToolBarProps<T>, defaultDom: Element[]) => VNodeTypes[])`|`-`|
+|optionsRender|自定义工具栏右侧表格操作按钮,为false则显示默认：reload(刷新)\|density(表格密度)\|setting(列设置)\|fullScreen(全屏 默认不显示)|`false  \| ((props: ToolBarProps<T>, defaultDom: Element[]) => VNodeTypes[])`|`-`|
 |action|表格action方法|`ActionType`|`-`|
 |selectedRowKeys|列表选中键值数组|`(string \| number)[]`|`-`|
 |selectedRows|列表选中行数据|`any[]`|`-`|
@@ -263,7 +263,7 @@ description: 基于arco-design web-vue 的table封装的pro-table组件
 |collapsed|是否收起|`boolean`|`false`|
 |onCollapse|收起按钮的事件|`(collapsed: boolean) => void`|`-`|
 |submitText|提交按钮的文本|`string`|`-`|
-|formProps|设置搜索表单的Form props|`Omit<FormInstance, "model" \| "scrollToFirstError">`|`-`|
+|formProps|设置搜索表单的Form props|`((data: FormPropsData) => Omit<FormInstance, 'model' \| 'scrollToFirstError'>)  \| Omit<FormInstance, 'model' \| 'scrollToFirstError'>`|`-`|
 
 
 
@@ -284,7 +284,7 @@ description: 基于arco-design web-vue 的table封装的pro-table组件
 |参数名|描述|类型|默认值|
 |---|---|---|:---:|
 |sortDirections|支持的排序方向|`('ascend' \| 'descend')[]`|`-`|
-|sorter|排序函数。设置为 `true` 可关闭内部排序。2.19.0 版本修改传出数据。|`((        a: TableData,        b: TableData,        extra: { dataIndex: string; direction: 'ascend' \| 'descend' }      ) => number)    \| boolean`|`-`|
+|sorter|排序函数。设置为 `true` 可关闭内部排序。2.19.0 版本修改传出数据。|`((    a: TableData,    b: TableData,    extra: { dataIndex: string; direction: 'ascend' \| 'descend' }  ) => number)  \| boolean`|`-`|
 |sortOrder|排序方向|`'ascend' \| 'descend' \| ''`|`-`|
 |defaultSortOrder|默认排序方向（非受控模式）|`'ascend' \| 'descend' \| ''`|`-`|
 
@@ -387,7 +387,7 @@ description: 基于arco-design web-vue 的table封装的pro-table组件
 ### 默认表格可互动 [demo](https://licailing.github.io/arco-vue-pro-components/?path=/story/pro-table--basic-demo)
 ```tsx
 import { defineComponent, ref } from 'vue';
-import { Link } from '@arco-design/web-vue';
+import { Button, Modal, Link } from '@arco-design/web-vue';
 import type {
   ActionType,
   ProColumns,
@@ -455,6 +455,12 @@ export default defineComponent({
     const setActionRef = (ref: ActionType) => {
       actionRef.value = ref;
     };
+    const visible = ref(false);
+    const current = ref({});
+    const handleClick = (record) => {
+      visible.value = true;
+      current.value = JSON.parse(JSON.stringify(record));
+    };
     const columns: ProColumns[] = [
       {
         title: (_, type) => {
@@ -464,8 +470,23 @@ export default defineComponent({
         dataIndex: 'name',
         fixed: 'left',
         render: (data: RenderData) => <Link>{data.dom}</Link>,
-        formItemProps: {
-          labelColFlex: 'none', // 长label不换行
+        formItemProps: ({ formModel, type }) => {
+          if (type === 'form') {
+            return {
+              disabled:
+                formModel.value.key && formModel.value.name ? true : false, // 不能编辑
+              rules: [
+                {
+                  required: true,
+                  message: '此项为必填项',
+                },
+              ],
+            };
+          } else {
+            return {
+              labelColFlex: 'none', // 长label不换行
+            };
+          }
         },
       },
       {
@@ -524,9 +545,21 @@ export default defineComponent({
         dataIndex: 'option',
         valueType: 'option',
         hideInSearch: true,
+        hideInForm: true,
         fixed: 'right',
-        render: () => {
-          return [<Link key="link">链路</Link>];
+        render: ({ record }) => {
+          return [
+            <Button
+              type="text"
+              onClick={(event) => {
+                event.stopPropagation();
+                event.preventDefault();
+                handleClick(record);
+              }}
+            >
+              编辑
+            </Button>,
+          ];
         },
       },
     ];
@@ -539,55 +572,94 @@ export default defineComponent({
         expandedKeys.value
       );
       return (
-        <ProTable
-          columns={columns}
-          rowSelection={{
-            type: 'checkbox',
-            showCheckedAll: true,
-            checkStrictly: true,
-          }}
-          actionRef={setActionRef}
-          request={(params) => {
-            console.log('request reload', params);
-            return Promise.resolve({
-              data: tableListDataSource,
-              total: 10,
-              success: true,
-            });
-          }}
-          scroll={{ x: 1300 }}
-          onSelectAll={(checked: boolean) => {
-            console.log('onSelectAll', checked);
-          }}
-          onSelect={(rowKeys, rowKey, record) => {
-            console.log(
-              'onSelect:rowKeys:%o,rowKey:%o,record:%o',
-              rowKeys,
-              rowKey,
-              record
-            );
-          }}
-          v-model:selectedKeys={selectedKeys.value}
-          v-model:expandedKeys={expandedKeys.value}
-          rowKey="key"
-          headerTitle={({
-            selectedRowKeys,
-            selectedRows,
-            action,
-          }: ToolBarData<any>) => {
-            return (
-              <Link
-                href={encodeURI(
-                  'https://gitee.com/li-cailing/arco-vue-pro-components/blob/main/packages/pro-components/components/pro-table/README.md#默认表格可互动-demo'
-                )}
-                target="_blank"
-              >
-                默认示例(可互动)[查看源代码]
-              </Link>
-            );
-          }}
-          {...props}
-        />
+        <div>
+          <ProTable
+            columns={columns}
+            rowSelection={{
+              type: 'checkbox',
+              showCheckedAll: true,
+              checkStrictly: true,
+            }}
+            actionRef={setActionRef}
+            request={(params) => {
+              console.log('request reload', params);
+              return Promise.resolve({
+                data: tableListDataSource,
+                total: 10,
+                success: true,
+              });
+            }}
+            scroll={{ x: 1300 }}
+            onSelectAll={(checked: boolean) => {
+              console.log('onSelectAll', checked);
+            }}
+            onSelect={(rowKeys, rowKey, record) => {
+              console.log(
+                'onSelect:rowKeys:%o,rowKey:%o,record:%o',
+                rowKeys,
+                rowKey,
+                record
+              );
+            }}
+            v-model:selectedKeys={selectedKeys.value}
+            v-model:expandedKeys={expandedKeys.value}
+            rowKey="key"
+            headerTitle={({
+              selectedRowKeys,
+              selectedRows,
+              action,
+            }: ToolBarData<any>) => {
+              return (
+                <Link
+                  href={encodeURI(
+                    'https://gitee.com/li-cailing/arco-vue-pro-components/blob/main/packages/pro-components/components/pro-table/README.md#默认表格可互动-demo'
+                  )}
+                  target="_blank"
+                >
+                  默认示例(可互动)[查看源代码]
+                </Link>
+              );
+            }}
+            {...props}
+          />
+          <Modal
+            titleAlign="start"
+            title="arco-pro TableList组件有封装完整的(新增|编辑)弹框"
+            v-model:visible={visible.value}
+            draggable
+            unmountOnClose
+            maskClosable={false}
+            footer={false}
+            width="80%"
+          >
+            <ProTable
+              columns={columns}
+              type="form"
+              defaultFormData={current.value}
+              search={{
+                formProps: ({ formModel }) => {
+                  return {
+                    layout: 'horizontal',
+                    autoLabelWidth: true,
+                    rules: {
+                      containers: [
+                        {
+                          required: formModel.value.key ? true : false,
+                          message: '此项为必填项',
+                        },
+                      ],
+                    },
+                  };
+                },
+                gridProps: {
+                  cols: 2,
+                  rowGap: 20,
+                  colGap: 20,
+                },
+              }}
+            />
+          </Modal>
+        </div>
       );
     };
     return {

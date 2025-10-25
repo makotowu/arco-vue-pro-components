@@ -12,7 +12,6 @@ export type {
   ProColumnsValueType,
   ProColumnsValueObjectType,
   ValueEnumObj,
-  TableColumnData,
   RequestData,
   TableProps,
   UseFetchDataAction,
@@ -53,4 +52,6 @@ export type {
   ProColumnsValueTypeFunction,
   FormOptionProps,
   ProTableInstance,
+  FormItemPropsData,
+  FormPropsData,
 } from './pro-table';

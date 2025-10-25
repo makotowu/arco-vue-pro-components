@@ -52,6 +52,8 @@ export type {
   TableDataWithRaw,
   ProColumnsValueTypeFunction,
   FormOptionProps,
+  FormItemPropsData,
+  FormPropsData,
 } from './interface';
 
 export default ProTable;
