@@ -361,7 +361,7 @@ export default defineComponent({
     watch(
       columns,
       (columns) => {
-        columnsList.value =
+        const newColumnsList =
           columns
             .filter((item) => {
               if (item.hideInSearch && props.type !== 'form') {
@@ -392,7 +392,16 @@ export default defineComponent({
               }
               return 0;
             }) || [];
-        gridKey.value = Date.now();
+        const newKeys = newColumnsList
+          .map((item) => item.key || item.dataIndex)
+          .join(',');
+        const oldKeys = columnsList.value
+          .map((item) => item.key || item.dataIndex)
+          .join(',');
+        columnsList.value = newColumnsList;
+        if (newKeys !== oldKeys) {
+          gridKey.value = Date.now();
+        }
       },
       { deep: true, immediate: true }
     );
@@ -413,6 +422,86 @@ export default defineComponent({
       }
     };
     const renderGridFormItems = () => {
+      if (searchConfig.value.layout === 'inline') {
+        const collapsedLimit = 3;
+        const showCollapseButton = columnsList.value.length > collapsedLimit;
+        const visibleColumns =
+          collapsed.value && showCollapseButton
+            ? columnsList.value.slice(0, collapsedLimit)
+            : columnsList.value;
+        return (
+          <>
+            {visibleColumns.map((item, index) => {
+              const key = genColumnKey(
+                item.key || item.dataIndex?.toString(),
+                index
+              );
+              // 支持 function 的 title
+              const getTitle = () => {
+                if (item.title && typeof item.title === 'function') {
+                  return item.title(item, 'form');
+                }
+                return item.title;
+              };
+              const title = getTitle();
+              const valueType =
+                typeof item.valueType === 'function'
+                  ? item.valueType({})
+                  : item.valueType;
+              const hidden = valueType === 'hidden';
+              const formItemProps =
+                typeof item.formItemProps === 'function'
+                  ? item.formItemProps({ formModel, item, type: props.type })
+                  : item.formItemProps;
+              return (
+                <FormItem
+                  key={key}
+                  hidden={hidden}
+                  {...(isForm.value
+                    ? formItemProps
+                    : omit(formItemProps, [
+                        'rules',
+                        'disabled',
+                        'required',
+                        'validateStatus',
+                        'validateTrigger',
+                      ]))}
+                  field={item.dataIndex}
+                  label={
+                    !hidden && typeof title === 'string' ? title : undefined
+                  }
+                  v-slots={{
+                    label: () => {
+                      return hidden ? '' : title;
+                    },
+                  }}
+                >
+                  {cloneVNode(
+                    renderFormInput(
+                      item,
+                      props.type,
+                      formModel,
+                      formSearchRef,
+                      slots,
+                      t
+                    ),
+                    {
+                      'modelValue': formModel.value[item.dataIndex],
+                      'onUpdate:modelValue': (value: any) => {
+                        // 更新表单数据
+                        formModel.value[item.dataIndex] = value;
+                      },
+                    }
+                  )}
+                </FormItem>
+              );
+            })}
+            <FormItem key="action">
+              {renderFormOption(showCollapseButton)}
+            </FormItem>
+          </>
+        );
+      }
       return (
         <Grid
           {...gridProps.value}
@@ -559,8 +648,14 @@ export default defineComponent({
       );
     };
 
-    const gridProps = computed(() =>
-      props.type === 'form'
+    const gridProps = computed(() => {
+      if (searchConfig.value.layout === 'vertical') {
+        return {
+          cols: 1,
+          collapsed: collapsed.value,
+        };
+      }
+      return props.type === 'form'
         ? {
             cols: 1,
             collapsed: false,
@@ -568,8 +663,8 @@ export default defineComponent({
         : {
             cols: { xs: 1, sm: 2, md: 3 },
             collapsed: collapsed.value,
-          }
-    );
+          };
+    });
     const formProps = computed(() => {
       const data =
         typeof searchConfig.value.formProps === 'function'
@@ -579,7 +674,10 @@ export default defineComponent({
     });
     const render = () => (
       <Form
-        layout={isForm.value ? 'vertical' : 'horizontal'}
+        layout={
+          searchConfig.value.layout ||
+          (isForm.value ? 'vertical' : 'horizontal')
+        }
         {...formProps.value}
         model={formModel.value}
         ref={formSearchRef}
