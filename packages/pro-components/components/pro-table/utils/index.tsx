@@ -1,11 +1,5 @@
 import { Ref, VNodeChild, cloneVNode, isVNode } from 'vue';
-import {
-  PaginationProps,
-  Tooltip,
-  Space,
-  Divider,
-  TypographyParagraph,
-} from '@arco-design/web-vue';
+import { PaginationProps, Space, Divider } from '@arco-design/web-vue';
 import { getValueByPath } from '../../_utils/get-value-by-path';
 import { isArray, isObject } from '../../_utils/is';
 import type {
@@ -14,15 +8,13 @@ import type {
   ProColumns,
   ProTableTypes,
   ValueEnumMap,
-  ValueEnumObj,
   RenderData,
   RequestData,
   UseFetchDataAction,
-  StatusType,
 } from '../interface';
 import defaultRenderText from '../default-render';
-import TableStatus from '../status';
-import MyToolTip from '../my-tool-tip';
+import { renderEllipsisCopy } from '../default-render/ellipsis-copy';
+import { ObjToMap, parsingText } from '../default-render/value-enum';
 
 /**
  * 获取用户的 action 信息
@@ -93,56 +85,6 @@ export const genColumnKey = (
 /**
  * 减少 width，支持 string 和 number
  */
-export const reduceWidth = (
-  width?: string | number
-): string | number | undefined => {
-  if (width === undefined) {
-    return width;
-  }
-  if (typeof width === 'string') {
-    if (!width.includes('calc')) {
-      return `calc(100% - ${width})`;
-    }
-    return width;
-  }
-  if (typeof width === 'number') {
-    return (width as number) - 32;
-  }
-  return width;
-};
-
-/**
- * 生成 Ellipsis 的 tooltip及 复制
- * @param dom
- * @param item
- * @param text
- */
-const genEllipsisCopy = (dom: VNodeChild, item: ProColumns, text: string) => {
-  if (item.copyable || item.ellipsis) {
-    return (
-      <TypographyParagraph
-        style={{
-          width: reduceWidth(item.width),
-          margin: 0,
-          padding: 0,
-        }}
-        copyText={text}
-        // @ts-ignore
-        copyable={item.copyable}
-        ellipsis={
-          item.ellipsis
-            ? {
-                showTooltip: { type: 'tooltip', props: { position: 'bottom' } },
-              }
-            : false
-        }
-      >
-        {dom}
-      </TypographyParagraph>
-    );
-  }
-  return dom;
-};
 
 /**
  * 转化 columns 到 pro 的格式 主要是 render 方法的自行实现
@@ -245,21 +187,6 @@ export function genProColumnToColumn<T>(props: {
     .filter((item) => !item.hideInTable);
 }
 
-/**
- * 获取类型的 type
- * @param obj
- */
-function getType(obj: any) {
-  // @ts-ignore
-  const type = Object.prototype.toString
-    .call(obj)
-    .match(/^\[object (.*)\]$/)[1]
-    .toLowerCase();
-  if (type === 'string' && typeof obj === 'object') return 'object'; // Let "new String('')" return 'object'
-  if (obj === null) return 'null'; // PhantomJS has type "DOMWindow" for null
-  if (obj === undefined) return 'undefined'; // PhantomJS has type "DOMWindow" for undefined
-  return type;
-}
 
 interface ColumRenderInterface {
   item: ProColumns;
@@ -271,53 +198,6 @@ interface ColumRenderInterface {
   columnKey?: string;
 }
 
-export const ObjToMap = (
-  value: ValueEnumObj | ValueEnumMap | undefined
-): ValueEnumMap | undefined => {
-  if (!value) {
-    return value;
-  }
-  if (getType(value) === 'map') {
-    return value as ValueEnumMap;
-  }
-  return new Map(Object.entries(value));
-};
-/**
- * 转化 text 和 valueEnum
- * 通过 type 来添加 Status
- * @param text
- * @param valueEnum
- * @param prue 纯净模式，不增加 status
- */
-export const parsingText = (
-  text: string | number,
-  valueEnum?: ValueEnumMap,
-  pure?: boolean
-) => {
-  if (!valueEnum) {
-    return text;
-  }
-
-  if (!valueEnum.has(text) && !valueEnum.has(`${text}`)) {
-    return text;
-  }
-
-  const domText = (valueEnum.get(text) || valueEnum.get(`${text}`)) as {
-    text: VNodeChild;
-    status: StatusType;
-  };
-  if (domText.status) {
-    if (pure) {
-      return domText.text;
-    }
-    const { status } = domText;
-    const Status = TableStatus[status || 'Default'];
-    if (Status) {
-      return Status({ text: domText.text });
-    }
-  }
-  return domText.text || domText;
-};
 
 /**
  * 检查值是否存在
@@ -345,11 +225,15 @@ const columRender = ({
   }
   const text = getValueByPath(record, item.dataIndex) ?? '';
   const { renderText = (val: any) => val, valueEnum = {} } = item;
-  const renderTextStr = renderText(parsingText(text, ObjToMap(valueEnum)), {
-    record,
-    rowIndex,
-    action: action.value,
-  });
+  const valueEnumMap = ObjToMap(runFunction(valueEnum, undefined) as any);
+  const renderTextStr = renderText(
+    parsingText(text, valueEnumMap),
+    {
+      record,
+      rowIndex,
+      action: action.value,
+    }
+  );
   const textDom = defaultRenderText(
     renderTextStr,
     item.valueType || 'text',
@@ -360,10 +244,10 @@ const columRender = ({
     columnKey
   );
 
-  const dom: VNodeChild = genEllipsisCopy(
+  const dom: VNodeChild = renderEllipsisCopy(
     textDom,
     item,
-    renderText(parsingText(text, ObjToMap(valueEnum), true), {
+    renderText(parsingText(text, valueEnumMap, true), {
       record,
       rowIndex,
       action: action.value,
@@ -526,6 +410,8 @@ export const setFields = (defaultFormData: any, form: any) => {
   form.setFields(fieldsData);
 };
 
+export { ObjToMap, parsingText };
+
 /**
  * 把 value 的枚举转化为数组
  * @param valueEnum
@@ -578,22 +464,24 @@ export function runFunction(valueEnum: any, ...rest: any) {
   return valueEnum;
 }
 
-export function flattenChildren(arr: any[] = [], rowKey: string): any {
+export function flattenChildren(
+  arr: any[] = [],
+  rowKey: string,
+  result: Record<string, any> = {}
+): Record<string, any> {
   if (!isArray(arr) || !arr.length) {
-    return {};
+    return result;
   }
-  let data: any = {};
   for (let item of arr) {
     if (!item || item[rowKey] == undefined) {
       continue;
     }
-    data[item[rowKey]] = item;
-    if (!isArray(item.children) || !item.children.length) {
-      continue;
+    result[item[rowKey]] = item;
+    if (isArray(item.children) && item.children.length) {
+      flattenChildren(item.children, rowKey, result);
     }
-    data = { ...data, ...flattenChildren(item.children, rowKey) };
   }
-  return data;
+  return result;
 }
 
 const isNode =

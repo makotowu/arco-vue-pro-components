@@ -4,13 +4,12 @@ export const omit = <T extends Data, K extends keyof any>(
   object: T,
   path: Array<K>
 ): Omit<T, K> => {
-  const result = { ...object };
+  const result: any = {};
+  const paths = new Set(path as any[]);
 
-  for (const item of path) {
-    // @ts-ignore
-    if (item in result) {
-      // @ts-ignore
-      delete result[item];
+  for (const key in object) {
+    if (!paths.has(key)) {
+      result[key] = object[key];
     }
   }
 

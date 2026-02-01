@@ -1,4 +1,4 @@
-import { watch, Ref, onBeforeUnmount } from 'vue';
+import { watch, Ref, onBeforeUnmount, ref } from 'vue';
 import useState from '../../_hooks/use-state';
 import { debounce } from 'lodash';
 import { PaginationProps } from '@arco-design/web-vue';
@@ -47,6 +47,14 @@ const useFetchData = <T extends RequestData<any>>(
   const [pageInfo, setPageInfo] = useState<PageInfo>(
     mergeOptionAndPageInfo(options.pageInfo)
   );
+
+  const mounted = ref(true);
+
+  onBeforeUnmount(() => {
+    mounted.value = false;
+    fetchListDebounce.cancel();
+  });
+
   const fetchList = async (isAppend?: boolean) => {
     if (loading.value || !getData) {
       return [];
@@ -62,6 +70,9 @@ const useFetchData = <T extends RequestData<any>>(
         current: pageInfo.value.current,
         pageSize: pageInfo.value.pageSize,
       })) || {};
+      
+      if (!mounted.value) return [];
+
       if (success !== false) {
         if (isAppend && list) {
           setList([...list.value, ...data]);
@@ -77,13 +88,16 @@ const useFetchData = <T extends RequestData<any>>(
         emit('load', data, dataTotal, rest);
       }
     } catch (e: any) {
+      if (!mounted.value) return [];
       if (emit) {
         emit('requestError', e);
       }
     } finally {
-      requestAnimationFrame(() => {
-        setLoading(false);
-      });
+      if (mounted.value) {
+        requestAnimationFrame(() => {
+          setLoading(false);
+        });
+      }
     }
     return [];
   };
@@ -118,10 +132,6 @@ const useFetchData = <T extends RequestData<any>>(
       deep: true,
     }
   );
-
-  onBeforeUnmount(() => {
-    fetchListDebounce.cancel();
-  });
 
   return {
     data: list,

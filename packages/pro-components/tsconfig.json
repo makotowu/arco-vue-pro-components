@@ -2,6 +2,7 @@
   "compilerOptions": {
     "outDir": "es",
     "target": "ES2015",
+    "module": "esnext",
     "moduleResolution": "node",
     "strict": true,
     "allowJs": true,

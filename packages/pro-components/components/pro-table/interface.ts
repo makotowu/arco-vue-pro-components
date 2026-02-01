@@ -62,7 +62,8 @@ export type ProColumnsValueType =
   | 'code'
   | 'avatar'
   | 'image'
-  | 'uploadFile';
+  | 'uploadFile'
+  | 'hidden';
 
 /**
  * value type by function
@@ -75,7 +76,7 @@ export type ValueEnumObj = {
   [key: string]:
   | {
     text: VNodeTypes;
-    status: StatusType;
+    status: keyof StatusType;
   }
   | VNodeTypes;
 };
@@ -84,7 +85,7 @@ export type ValueEnumMap = Map<
   any,
   | {
     text: VNodeChild;
-    status: StatusType;
+    status: keyof StatusType;
   }
   | VNodeChild
 >;
@@ -277,6 +278,18 @@ export interface ProColumns
 
 export type ColumnEmptyText = string | false;
 
+export type ProTableCacheCompare<T> = (prev: T | undefined, next: T) => boolean;
+
+export type ProTableCacheConfig<T> = {
+  enabled?: boolean;
+  compare?: ProTableCacheCompare<T>;
+};
+
+export type ProTableVirtualConfig = {
+  virtualListProps?: VirtualListProps;
+  loadMore?: (record: TableData, done: (children?: TableData[]) => void) => void;
+};
+
 export interface TableProps {
   columns: TableColumnData[];
   data: TableData[];
@@ -293,6 +306,9 @@ export interface ProTableProps extends Omit<TableProps, 'columns'> {
    * @en table column
    */
   columns: ProColumns[];
+  columnsCache?: boolean | ProTableCacheConfig<TableColumnData[]>;
+  dataCache?: boolean | ProTableCacheConfig<TableData[]>;
+  virtual?: boolean | ProTableVirtualConfig;
   /**
    * @zh pro-table类型
    * @en pro-table type
@@ -347,6 +363,11 @@ export interface ProTableProps extends Omit<TableProps, 'columns'> {
    * @en table tilte
    */
   headerTitle?: ToolBarProps<any>['headerTitle'];
+  /**
+   * @zh Card 组件的 props，设置为 false 时不显示 Card
+   * @en Props of the Card component, not displayed when set to false
+   */
+  cardProps?: Record<string, any> | boolean;
   /**
    * @zh 是否显示搜索表单，传入对象时为搜索表单的配置
    * @en Configuration column search related, false is hidden
