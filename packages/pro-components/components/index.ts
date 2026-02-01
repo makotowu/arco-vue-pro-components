@@ -7,6 +7,7 @@ export type {
   ProInputNumberInstance,
 } from './pro-input-number';
 export { default as ProTable } from './pro-table';
+export { ProFormSearch } from './pro-table';
 export type {
   ProColumns,
   ProColumnsValueType,
@@ -36,12 +37,6 @@ export type {
   TableChangeExtra,
   Sorter,
   Sorters,
-  ItemSlot,
-  ScrollIntoViewOptions,
-  VirtualListProps,
-  ScrollOptions,
-  VirtualListRef,
-  InternalDataItem,
   TableBorder,
   TriggerProps,
   TableRowSelection,
@@ -52,6 +47,7 @@ export type {
   ProColumnsValueTypeFunction,
   FormOptionProps,
   ProTableInstance,
+  ProFormSearchInstance,
   FormItemPropsData,
   FormPropsData,
 } from './pro-table';

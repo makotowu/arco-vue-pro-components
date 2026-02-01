@@ -1,12 +1,13 @@
 import type { App, Plugin } from 'vue';
 import ProSelect from './pro-select';
 import ProInputNumber from './pro-input-number';
-import ProTable from './pro-table';
+import ProTable, { ProFormSearch } from './pro-table';
 
 const components: Record<string, Plugin> = {
   ProSelect,
   ProInputNumber,
   ProTable,
+  ProFormSearch,
 };
 
 const install = (app: App) => {

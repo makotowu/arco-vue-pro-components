@@ -20,10 +20,12 @@ description: pro-table component based on arco-design web-vue table package
 |Attribute|Description|Type|Default|
 |---|---|---|:---:|
 |columns|Column info of the table|`ProColumns[]`|`[]`|
+|columns-cache|Column cache config|`boolean \| ProTableCacheConfig<TableColumnData[]>`|`-`|
 |row-key|Value field of table row `key`|`string`|`'id'`|
 |params|Additional parameters used for `request` query, once changed will trigger reloading|`object`|`-`|
 |request|How to get `data` \| `(params?: {pageSize,current},sort,filter) => {data,success,total}`|`(  params: {    pageSize?: number;    current?: number;    [key: string]: any;  },  sort: {    [key: string]: 'ascend' \| 'descend';  },  filter: { [key: string]: any }) => Promise<RequestData<any>>`|`-`|
 |default-data|Default data|`array`|`-`|
+|data-cache|Data cache config|`boolean \| ProTableCacheConfig<TableData[]>`|`-`|
 |before-search-submit|Make some changes before searching|`(searchParams: any) => any`|`(searchParams: any) => searchParams`|
 |search|Configuration column search related, false is hidden|`SearchConfig \| boolean`|`true`|
 |type|pro-table type|`ProTableTypes`|`'table'`|
@@ -52,7 +54,6 @@ description: pro-table component based on arco-design web-vue table package
 |page-position|The position of the page selector|`'tl' \| 'top' \| tr' \| 'bl' \| 'bottom' \| 'br'`|`'br'`|
 |indent-size|The indentation distance of the tree table|`number`|`16`|
 |show-header|Whether to show the header|`boolean`|`true`|
-|virtual-list-props|Pass the virtual list attribute, pass in this parameter to turn on virtual scrolling [VirtualListProps](#VirtualListProps)|`VirtualListProps`|`-`|
 |span-method|Cell merge method (The index starts counting from the data item)|`(data: {  record: TableData;  column: TableColumnData \| TableOperationColumn;  rowIndex: number;  columnIndex: number;}) => { rowspan?: number; colspan?: number } \| void`|`-`|
 |span-all|Whether to make the index of the span method contain all|`boolean`|`false`|
 |load-more|Data lazy loading function, open the lazy loading function when it is passed in|`(record: TableData, done: (children?: TableData[]) => void) => void`|`-`|
@@ -159,12 +160,14 @@ description: pro-table component based on arco-design web-vue table package
 |Name|Description|Type|Default|
 |---|---|---|:---:|
 |columns|table column|`ProColumns[]`|`-`|
+|columnsCache|Column cache config|`boolean \| ProTableCacheConfig<TableColumnData[]>`|`-`|
 |type|pro-table type|`ProTableTypes`|`-`|
 |params|Additional parameters used for `request` query, once changed will trigger reloading|`{ [key: string]: any }`|`-`|
+|dataCache|Data cache config|`boolean \| ProTableCacheConfig<TableData[]>`|`-`|
 |size|The size of the select|`Size`|`'large'`|
 |request|How to get `data` \| `(params?: {pageSize,current},sort,filter) => {data,success,total}`|`(    params: {      pageSize?: number;      current?: number;      [key: string]: any;    },    sort: {      [key: string]: 'ascend' \| 'descend';    },    filter: { [key: string]: string }  ) => Promise<RequestData<any>>`|`-`|
 |toolBarRender|Render toolbar, support returning a dom array, will automatically increase margin-right|`ToolBarProps<any>['toolBarRender'] \| false`|`-`|
-|optionRender|Custom action bar|`ToolBarProps<any>['optionsRender'] \| false`|`-`|
+|optionsRender|Custom action bar|`ToolBarProps<any>['optionsRender'] \| false`|`-`|
 |options|table toolbar, not displayed when set to false|`OptionConfig \| false`|`-`|
 |headerTitle|table tilte|`ToolBarProps<any>['headerTitle']`|`-`|
 |search|Configuration column search related, false is hidden|`boolean \| SearchConfig`|`-`|
@@ -3736,4 +3739,3 @@ export default defineComponent({
 });
 
 ```
-

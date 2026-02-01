@@ -18,7 +18,9 @@ description: When users need to select one or more from a group of similar data,
 |Attribute|Description|Type|Default|
 |---|---|---|:---:|
 |cache-for-swr|Whether to open request by keyword search|`boolean`|`false`|
+|column-key|Cache key for request data|`string`|`''`|
 |request-search|Whether to open request by keyword search|`boolean`|`false`|
+|mode|Read mode|`'read'`|`-`|
 |multiple|Whether to open multi-select mode (The search is turned on by default in the multi-select mode)|`boolean`|`undefined`|
 |model-value **(v-model)**|Value|`string\| number\| Record<string, any>\| (string \| number \| Record<string, any>)[]`|`-`|
 |fallback-option|Options that do not exist in custom values|`boolean`|`false`|
@@ -42,7 +44,7 @@ description: When users need to select one or more from a group of similar data,
 |Event Name|Description|Parameters|
 |---|---|---|
 |update:model-value|Triggered when value changes|value: `any`|
-|change|Triggered when value changes|value: `any`<br>option: `Record<string, any>`|
+|change|Triggered when value changes|value: `any`<br>option: `Record<string, any> \| any[]`|
 
 
 
@@ -54,7 +56,9 @@ description: When users need to select one or more from a group of similar data,
 |Name|Description|Type|Default|
 |---|---|---|:---:|
 |cacheForSwr|Whether to open request by keyword search|`boolean`|`false`|
+|columnKey|Cache key for request data|`string`|`''`|
 |requestSearch|Whether to open request by keyword search|`boolean`|`false`|
+|mode|Read mode|`'read'`|`-`|
 |multiple|Whether to open multi-select mode (The search is turned on by default in the multi-select mode)|`boolean`|`undefined`|
 |modelValue **(v-model)**|Value|`any`|`-`|
 |fallbackOption|Options that do not exist in custom values|`boolean`|`false`|

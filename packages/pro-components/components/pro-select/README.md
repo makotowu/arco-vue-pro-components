@@ -16,7 +16,9 @@ description: 当用户需要从一组同类数据中选择一个或多个时，�
 |参数名|描述|类型|默认值|
 |---|---|---|:---:|
 |cache-for-swr|是否使用 swr 来缓存 缓存可能导致数据更新不及时，请谨慎使用，尤其是页面中多个组件 name 相同|`boolean`|`false`|
+|column-key|缓存 key，用于区分请求缓存|`string`|`''`|
 |request-search|是否开启 request 远程搜索|`boolean`|`false`|
+|mode|只读模式|`'read'`|`-`|
 |multiple|是否开启多选模式（多选模式默认开启搜索）|`boolean`|`undefined`|
 |model-value **(v-model)**|绑定值|`string\| number\| Record<string, any>\| (string \| number \| Record<string, any>)[]`|`-`|
 |fallback-option|自定义值中不存在的选项|`boolean`|`false`|
@@ -40,7 +42,7 @@ description: 当用户需要从一组同类数据中选择一个或多个时，�
 |事件名|描述|参数|
 |---|---|---|
 |update:model-value|更新v-model值|value: `any`|
-|change|更新时触发|value: `any`<br>option: `Record<string, any>`|
+|change|更新时触发|value: `any`<br>option: `Record<string, any> \| any[]`|
 
 
 
@@ -52,7 +54,9 @@ description: 当用户需要从一组同类数据中选择一个或多个时，�
 |参数名|描述|类型|默认值|
 |---|---|---|:---:|
 |cacheForSwr|是否使用 swr 来缓存 缓存可能导致数据更新不及时，请谨慎使用，尤其是页面中多个组件 name 相同|`boolean`|`false`|
+|columnKey|缓存 key，用于区分请求缓存|`string`|`''`|
 |requestSearch|是否开启 request 远程搜索|`boolean`|`false`|
+|mode|只读模式|`'read'`|`-`|
 |multiple|是否开启多选模式（多选模式默认开启搜索）|`boolean`|`undefined`|
 |modelValue **(v-model)**|绑定值|`any`|`-`|
 |fallbackOption|自定义值中不存在的选项|`boolean`|`false`|

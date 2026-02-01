@@ -18,10 +18,12 @@ description: 基于arco-design web-vue 的table封装的pro-table组件
 |参数名|描述|类型|默认值|
 |---|---|---|:---:|
 |columns|表格的列描述信息|`ProColumns[]`|`[]`|
+|columns-cache|列配置缓存|`boolean \| ProTableCacheConfig<TableColumnData[]>`|`-`|
 |row-key|表格行 `key` 的取值字段|`string`|`'id'`|
 |params|request 的参数，修改之后会触发更新|`object`|`-`|
 |request|获取 `data` 的方法 \| `(params?: {pageSize,current},sort,filter) => {data,success,total}`|`(  params: {    pageSize?: number;    current?: number;    [key: string]: any;  },  sort: {    [key: string]: 'ascend' \| 'descend';  },  filter: { [key: string]: any }) => Promise<RequestData<any>>`|`-`|
 |default-data|默认的数据|`array`|`-`|
+|data-cache|数据缓存|`boolean \| ProTableCacheConfig<TableData[]>`|`-`|
 |before-search-submit|格式化搜索表单提交数据|`(searchParams: any) => any`|`(searchParams: any) => searchParams`|
 |search|是否显示搜索表单，传入对象时为搜索表单的配置|`SearchConfig \| boolean`|`true`|
 |type|pro-table 类型|`ProTableTypes`|`'table'`|
@@ -50,7 +52,6 @@ description: 基于arco-design web-vue 的table封装的pro-table组件
 |page-position|分页选择器的位置|`'tl' \| 'top' \| tr' \| 'bl' \| 'bottom' \| 'br'`|`'br'`|
 |indent-size|树形表格的缩进距离|`number`|`16`|
 |show-header|是否显示表头|`boolean`|`true`|
-|virtual-list-props|传递虚拟列表属性，传入此参数以开启虚拟滚动 [VirtualListProps](#VirtualListProps)|`VirtualListProps`|`-`|
 |span-method|单元格合并方法（索引从数据项开始计数）|`(data: {  record: TableData;  column: TableColumnData \| TableOperationColumn;  rowIndex: number;  columnIndex: number;}) => { rowspan?: number; colspan?: number } \| void`|`-`|
 |span-all|是否让合并方法的索引包含所有|`boolean`|`false`|
 |load-more|数据懒加载函数，传入时开启懒加载功能|`(record: TableData, done: (children?: TableData[]) => void) => void`|`-`|
@@ -157,12 +158,14 @@ description: 基于arco-design web-vue 的table封装的pro-table组件
 |参数名|描述|类型|默认值|
 |---|---|---|:---:|
 |columns|columns|`ProColumns[]`|`-`|
+|columnsCache|列配置缓存|`boolean \| ProTableCacheConfig<TableColumnData[]>`|`-`|
 |type|pro-table类型|`ProTableTypes`|`-`|
 |params|request的参数，修改之后会触发更新|`{ [key: string]: any }`|`-`|
+|dataCache|数据缓存|`boolean \| ProTableCacheConfig<TableData[]>`|`-`|
 |size|表格的大小|`Size`|`'large'`|
 |request|获取 `data` 的方法 \| `(params?: {pageSize,current},sort,filter) => {data,success,total}` 组件内部有维护loading，不需要传loading|`(    params: {      pageSize?: number;      current?: number;      [key: string]: any;    },    sort: {      [key: string]: 'ascend' \| 'descend';    },    filter: { [key: string]: string }  ) => Promise<RequestData<any>>`|`-`|
 |toolBarRender|渲染工具栏，支持返回一个 dom 数组，会自动增加 margin-right|`ToolBarProps<any>['toolBarRender'] \| false`|`-`|
-|optionRender|自定义操作栏|`ToolBarProps<any>['optionsRender'] \| false`|`-`|
+|optionsRender|自定义操作栏|`ToolBarProps<any>['optionsRender'] \| false`|`-`|
 |options|配置table 工具栏右侧表格操作按钮，设为 false 时不显示，传入 function 会点击时触发,默认按钮:reload(刷新)\|density(表格密度)\|setting(列设置)\|fullScreen(全屏 默认不显示)|`OptionConfig \| false`|`-`|
 |headerTitle|表格标题|`ToolBarProps<any>['headerTitle']`|`-`|
 |search|是否显示搜索表单，传入对象时为搜索表单的配置|`boolean \| SearchConfig`|`-`|
@@ -3734,4 +3737,3 @@ export default defineComponent({
 });
 
 ```
-

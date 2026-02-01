@@ -31,7 +31,6 @@ import type {
   ActionType,
   ColumnEmptyText,
   ProTableCacheConfig,
-  ProTableVirtualConfig,
   LightSearchConfig,
   ProColumns,
   ProTableProps,
@@ -43,7 +42,6 @@ import type {
   TableOperationColumn,
   TablePagePosition,
   TableComponents,
-  VirtualListProps,
   TableData,
   ColumnStateType,
   AlertRenderType,
@@ -118,9 +116,6 @@ export default defineComponent({
           filter: { [key: string]: any }
         ) => Promise<RequestData<any>>
       >,
-    },
-    virtual: {
-      type: [Boolean, Object] as PropType<boolean | ProTableVirtualConfig>,
     },
     dataCache: {
       type: [Boolean, Object] as PropType<
@@ -384,14 +379,6 @@ export default defineComponent({
     showHeader: {
       type: Boolean,
       default: true,
-    },
-    /**
-     * @zh 传递虚拟列表属性，传入此参数以开启虚拟滚动 [VirtualListProps](#VirtualListProps)
-     * @en Pass the virtual list attribute, pass in this parameter to turn on virtual scrolling [VirtualListProps](#VirtualListProps)
-     * @type VirtualListProps
-     */
-    virtualListProps: {
-      type: Object as PropType<VirtualListProps>,
     },
     /**
      * @zh 单元格合并方法（索引从数据项开始计数）
@@ -886,9 +873,7 @@ export default defineComponent({
       defaultSelected,
       pagination: propsPagination,
       columns,
-      virtualListProps,
       loadMore,
-      virtual,
       columnsCache,
       type,
       columnEmptyText,
@@ -966,25 +951,6 @@ export default defineComponent({
     const setPopupContainer = (container: HTMLElement | undefined | null) => {
       popupContainer.value = container;
     };
-    const virtualConfig = computed(() => {
-      if (virtual.value === false) {
-        return {
-          virtualListProps: undefined,
-          loadMore: undefined,
-        };
-      }
-      if (virtual.value && typeof virtual.value === 'object') {
-        return {
-          virtualListProps:
-            virtual.value.virtualListProps ?? virtualListProps.value,
-          loadMore: virtual.value.loadMore ?? loadMore.value,
-        };
-      }
-      return {
-        virtualListProps: virtualListProps.value,
-        loadMore: loadMore.value,
-      };
-    });
     const {
       columnsMap,
       setColumnsMap,
@@ -1221,8 +1187,7 @@ export default defineComponent({
                 columns={processedColumns.value}
                 loading={props.loading || action.loading.value}
                 data={dataSource.value}
-                virtualListProps={virtualConfig.value.virtualListProps}
-                loadMore={virtualConfig.value.loadMore}
+                loadMore={loadMore.value}
                 onChange={handleChange}
                 v-slots={{
                   ...slots,

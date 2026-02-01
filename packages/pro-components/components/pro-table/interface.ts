@@ -285,11 +285,6 @@ export type ProTableCacheConfig<T> = {
   compare?: ProTableCacheCompare<T>;
 };
 
-export type ProTableVirtualConfig = {
-  virtualListProps?: VirtualListProps;
-  loadMore?: (record: TableData, done: (children?: TableData[]) => void) => void;
-};
-
 export interface TableProps {
   columns: TableColumnData[];
   data: TableData[];
@@ -308,7 +303,6 @@ export interface ProTableProps extends Omit<TableProps, 'columns'> {
   columns: ProColumns[];
   columnsCache?: boolean | ProTableCacheConfig<TableColumnData[]>;
   dataCache?: boolean | ProTableCacheConfig<TableData[]>;
-  virtual?: boolean | ProTableVirtualConfig;
   /**
    * @zh pro-table类型
    * @en pro-table type
@@ -1323,43 +1317,6 @@ export type Sorter = { field: string; direction: 'ascend' | 'descend' };
 export type Sorters = { [field: string]: 'ascend' | 'descend' };
 
 export type Filters = Record<string, string[]>;
-export declare type VirtualItemKey = string | number;
-export interface InternalDataItem {
-  key: VirtualItemKey;
-  index: number;
-  item: unknown;
-}
-export declare type ItemSlot = (props: {
-  item: unknown;
-  index: number;
-}) => VNode[];
-export interface ScrollIntoViewOptions {
-  index?: number;
-  key?: VirtualItemKey;
-  align: 'auto' | 'top' | 'bottom';
-}
-export interface VirtualListProps {
-  height?: number | string;
-  threshold?: number;
-  isStaticItemHeight?: boolean;
-  fixedSize?: boolean;
-  estimatedSize?: number;
-  buffer?: number;
-  data?: unknown[];
-  itemKey?: string | ((item: unknown) => VirtualItemKey);
-  component?: keyof HTMLElementTagNameMap;
-}
-export declare type ScrollOptions =
-  | number
-  | {
-    index?: number;
-    key?: VirtualItemKey;
-    align?: 'auto' | 'top' | 'bottom';
-  };
-export interface VirtualListRef {
-  scrollTo: (options: ScrollOptions) => void;
-}
-
 export type TriggerPopupTranslate =
   | [number, number]
   | { [key in TriggerPosition]?: [number, number] };
