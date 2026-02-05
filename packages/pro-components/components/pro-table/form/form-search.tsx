@@ -9,7 +9,6 @@ import {
   watch,
   toRef,
   watchEffect,
-  toRefs,
 } from 'vue';
 import {
   Form,
@@ -39,6 +38,7 @@ import type {
   RenderFormItemData,
   SearchConfig,
   FormOptionProps,
+  FormItemPropsData,
 } from '../interface';
 import {
   ObjToMap,
@@ -435,6 +435,11 @@ export default defineComponent({
               return item.title;
             };
             const title = getTitle();
+            const data: FormItemPropsData = {
+              formModel,
+              item,
+              type: props.type,
+            };
             const valueType =
               typeof item.valueType === 'function'
                 ? item.valueType({})
@@ -442,7 +447,7 @@ export default defineComponent({
             const hidden = valueType === 'hidden';
             const formItemProps =
               typeof item.formItemProps === 'function'
-                ? item.formItemProps({ formModel, item, type: props.type })
+                ? item.formItemProps(data)
                 : item.formItemProps;
             return (
               <GridItem key={key} hidden={hidden} {...item.girdItemProps}>

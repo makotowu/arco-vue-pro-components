@@ -50,6 +50,7 @@ export default defineComponent({
     const setActionRef = (ref: ActionType) => {
       actionRef.value = ref;
     };
+    const params = ref<any>({ type: 1 });
     const columns: ProColumns[] = [
       {
         title: '应用名称',
@@ -248,6 +249,9 @@ export default defineComponent({
         },
       },
     ];
+    const handleChange = () => {
+      params.value.type = 2;
+    }
     const render = () => {
       return (
         <div>
@@ -281,7 +285,7 @@ export default defineComponent({
               persistenceKey: 'pro-table-lightfilter-demos',
               persistenceType: 'localStorage',
             }}
-            params={{ type: 1 }}
+            params={params.value}
             defaultFormData={{ status: 'all', name: 'aaa' }}
             headerTitle={
               <Link
@@ -294,6 +298,7 @@ export default defineComponent({
               </Link>
             }
             toolBarRender={() => [
+              <Button key="show" onClick={handleChange}>切换请求参数</Button>,
               <Button key="show">查看日志</Button>,
               <Button key="out">
                 导出数据

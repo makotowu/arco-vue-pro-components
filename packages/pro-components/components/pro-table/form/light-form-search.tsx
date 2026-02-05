@@ -303,8 +303,8 @@ export default defineComponent({
               {columnsList.value.length > 0 &&
                 columnsList.value
                   .slice(0, searchConfig.value.rowNumber)
-                  .map((powerItem: any) => {
-                    const { key, title } = getFormItemInfo(powerItem);
+                  .map((powerItem: any, index) => {
+                    const { key, title } = getFormItemInfo(powerItem, index);
                     return (
                       <div key={key}>
                         {cloneVNode(
