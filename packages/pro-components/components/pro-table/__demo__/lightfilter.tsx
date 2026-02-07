@@ -54,7 +54,6 @@ export default defineComponent({
     const setActionRef = (ref: ActionType) => {
       actionRef.value = ref;
     };
-    const params = ref<any>({ type: 1 });
     const columns: ProColumns[] = [
       {
         title: '应用名称',
@@ -253,9 +252,6 @@ export default defineComponent({
         },
       },
     ];
-    const handleChange = () => {
-      params.value.type = 2;
-    }
     const render = () => {
       return (
         <div>
