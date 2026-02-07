@@ -183,7 +183,7 @@ export interface ProColumns
    * @zh 渲染查询表单的输入组件
    * @en Render the input component of the query form
    */
-  renderFormItem?: (data: RenderFormItemData) => VNodeTypes | 'hidden';
+  renderFormItem?: (data: RenderFormItemData) => VNodeTypes;
   /**
    * @zh 在查询表单中不展示此项
    * @en This item is not displayed in the query form
@@ -311,8 +311,7 @@ export interface ProTableProps extends Omit<TableProps, 'columns'> {
   /**
    * @zh request的参数，修改之后会触发更新
    * @en Additional parameters used for `request` query, once changed will trigger reloading
-   * @example pathname 修改重新触发 request
-   * params={{ pathName }}
+   * @example 修改重新触发 request
    */
   params?: { [key: string]: any };
   /**

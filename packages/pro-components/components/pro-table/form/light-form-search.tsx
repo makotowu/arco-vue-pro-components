@@ -192,7 +192,7 @@ export default defineComponent({
             <Space>
               {columnsList.value.length > 0 &&
                 columnsList.value
-                  .slice(0, rowNumber.value)
+                  .slice(0, searchConfig.value.rowNumber)
                   .map((powerItem: any, index) => {
                     const { key, title } = getFormItemInfo(powerItem, index);
                     return (
