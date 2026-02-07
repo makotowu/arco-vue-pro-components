@@ -9,7 +9,8 @@
     "esModuleInterop": true,
     "jsx": "preserve",
     "lib": [
-      "ES2020"
+      "ES2020",
+      "DOM"
     ],
     "noImplicitAny": false, // 是否在表达式和声明上有隐含的any类型时报错
   }
