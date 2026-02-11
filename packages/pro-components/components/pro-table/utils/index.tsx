@@ -13,7 +13,7 @@ import type {
   UseFetchDataAction,
 } from '../interface';
 import defaultRenderText from '../default-render';
-import { renderEllipsisCopy } from '../default-render/ellipsis-copy';
+import { renderEllipsisCopy } from '../default-render/ellipsis';
 import { ObjToMap, parsingText } from '../default-render/value-enum';
 
 /**
