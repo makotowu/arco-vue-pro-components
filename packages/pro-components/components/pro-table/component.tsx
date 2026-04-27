@@ -7,7 +7,6 @@ import {
   ref,
   toRefs,
   toRef,
-  watch,
   watchEffect,
   provide,
   inject,
@@ -42,6 +41,7 @@ import type {
   TableOperationColumn,
   TablePagePosition,
   TableComponents,
+  VirtualListProps,
   TableData,
   ColumnStateType,
   AlertRenderType,
@@ -379,6 +379,14 @@ export default defineComponent({
     showHeader: {
       type: Boolean,
       default: true,
+    },
+    /**
+     * @zh 传递虚拟列表属性，传入此参数以开启虚拟滚动 [VirtualListProps](#VirtualListProps)
+     * @en Pass the virtual list attribute, pass in this parameter to turn on virtual scrolling [VirtualListProps](#VirtualListProps)
+     * @type VirtualListProps
+     */
+    virtualListProps: {
+      type: Object as PropType<VirtualListProps>,
     },
     /**
      * @zh 单元格合并方法（索引从数据项开始计数）

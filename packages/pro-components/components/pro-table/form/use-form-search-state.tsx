@@ -1,6 +1,4 @@
 import {
-  ComputedRef,
-  Ref,
   computed,
   onMounted,
   onUnmounted,
@@ -9,6 +7,7 @@ import {
   watch,
   watchEffect,
 } from 'vue';
+import { IconDown } from '@arco-design/web-vue/es/icon';
 import type { SearchConfig } from '../interface';
 import { omit } from '../../_utils/omit';
 import ResponsiveObserve, { ScreenMap } from '../../_utils/responsive-observe';
@@ -16,19 +15,61 @@ import ResponsiveObserve, { ScreenMap } from '../../_utils/responsive-observe';
 export const useFormSearchState = ({
   props,
   emit,
-  searchConfig,
+  t,
 }: {
   props: any;
   emit: any;
-  searchConfig: ComputedRef<SearchConfig>;
+  t: Function;
 }) => {
   const columns = toRef(props, 'columns');
   const defaultFormData = toRef(props, 'defaultFormData');
   const formSearchRef = ref();
   const isForm = computed(() => props.type === 'form');
+  const defaultSearchConfig = {
+    searchText: t('tableForm.search'),
+    resetText: t('tableForm.reset'),
+    submitText: t('tableForm.submit'),
+    collapseRender: (collapsed: boolean) => {
+      if (collapsed) {
+        return (
+          <>
+            {t('tableForm.collapsed')}
+            <IconDown
+              style={{
+                verticalAlign: 'middle',
+                fontSize: '16px',
+                marginLeft: '8px',
+                transition: '0.3s all',
+                transform: `rotate(${collapsed ? 0 : 0.5}turn)`,
+              }}
+            />
+          </>
+        );
+      }
+      return (
+        <>
+          {t('tableForm.expand')}
+          <IconDown
+            style={{
+              verticalAlign: 'baseline',
+              fontSize: '16px',
+              marginLeft: '8px',
+              transition: '0.3s all',
+              transform: `rotate(${collapsed ? 0 : 0.5}turn)`,
+            }}
+          />
+        </>
+      );
+    },
+  };
+  const searchConfig = computed((): SearchConfig => {
+    return Object.assign(defaultSearchConfig, props.search) as SearchConfig;
+  });
 
   const resolvedLayout = computed(() => {
-    return searchConfig.value.layout || (isForm.value ? 'vertical' : 'horizontal');
+    return (
+      searchConfig.value.layout || (isForm.value ? 'vertical' : 'horizontal')
+    );
   });
 
   const resolveInlineLimit = (screens?: ScreenMap) => {
@@ -159,36 +200,36 @@ export const useFormSearchState = ({
   });
 
   const columnsList = computed(() => {
-    return columns.value
-      .filter((item) => {
-        if (item.hideInSearch && props.type !== 'form') {
+    return (
+      columns.value
+        .filter((item) => {
+          if (item.hideInSearch && props.type !== 'form') {
+            return false;
+          }
+          if (props.type === 'form' && item.hideInForm) {
+            return false;
+          }
+          if (
+            !(item.valueType === 'index' || item.valueType === 'indexBorder') &&
+            (item.key || item.dataIndex)
+          ) {
+            return true;
+          }
           return false;
-        }
-        if (props.type === 'form' && item.hideInForm) {
-          return false;
-        }
-        if (
-          !(
-            item.valueType === 'index' || item.valueType === 'indexBorder'
-          ) &&
-          (item.key || item.dataIndex)
-        ) {
-          return true;
-        }
-        return false;
-      })
-      .sort((a, b) => {
-        if (a && b) {
-          return (b.order || 0) - (a.order || 0);
-        }
-        if (a && a.order) {
-          return -1;
-        }
-        if (b && b.order) {
-          return 1;
-        }
-        return 0;
-      }) || [];
+        })
+        .sort((a, b) => {
+          if (a && b) {
+            return (b.order || 0) - (a.order || 0);
+          }
+          if (a && a.order) {
+            return -1;
+          }
+          if (b && b.order) {
+            return 1;
+          }
+          return 0;
+        }) || []
+    );
   });
 
   const gridKey = ref(Date.now());

@@ -301,7 +301,15 @@ export interface ProTableProps extends Omit<TableProps, 'columns'> {
    * @en table column
    */
   columns: ProColumns[];
+  /**
+   * @zh 列配置缓存
+   * @en Column cache config
+   */
   columnsCache?: boolean | ProTableCacheConfig<TableColumnData[]>;
+  /**
+   * @zh 列配置缓存
+   * @en Data cache config
+   */
   dataCache?: boolean | ProTableCacheConfig<TableData[]>;
   /**
    * @zh pro-table类型
@@ -901,15 +909,18 @@ export interface FormOptionProps {
  */
 export interface SearchConfig {
   /**
-   * 查询按钮的文本
+   * @zh 查询按钮的文本
+   * @en The text of the query button 
    */
   searchText?: string;
   /**
-   * 重置按钮的文本
+   * @zh 重置按钮的文本
+   * @en Text of the reset button
    */
   resetText?: string;
   /**
-   * 收起按钮的 render
+   * @zh 设置渲染收起按钮
+   * @en Set the rendering collapse button
    */
   collapseRender?: (
     collapsed: boolean,
@@ -921,28 +932,41 @@ export interface SearchConfig {
     showCollapseButton?: boolean
   ) => VNodeChild;
   /**
-   * 是否收起
+   * @zh 是否收起
+   * @en Set whether to collapse
    */
   collapsed?: boolean;
   /**
-   * 收起按钮的事件
+   * @zh 收起按钮的事件
+   * @en The event of the "Collapse" button
    */
   onCollapse?: (collapsed: boolean) => void;
   /**
-   * 提交按钮的文本
+   * @zh 提交按钮的文本
+   * @en The text of the submit button
    */
   submitText?: string;
   /**
-   * 表单布局方式
+   * @zh 表单布局方式
+   * @en Form layout
    */
   layout?: 'horizontal' | 'vertical' | 'inline';
+  /**
+   * @zh 设置表单Grid props
+   * @en Set the Grid props for the form
+   */
   gridProps?: GridProps;
   /**
-   * 设置搜索表单的Form props
+   * @zh 设置表单的Form props
+   * @en Set the Form props for the form
    */
   formProps?:
   | ((data: FormPropsData) => Omit<FormInstance, 'model' | 'scrollToFirstError'>)
   | Omit<FormInstance, 'model' | 'scrollToFirstError'>;
+  /**
+   * @zh 自定义普通搜索表单(searchType=query)的按钮(如果search=false则不显示)，默认：重置|查询(type=table),重置|提交(type=form)
+   * @en Customize the search config
+   */
   optionRender?: ((props: FormOptionProps) => VNodeTypes) | false;
 }
 export type StatusType = {
@@ -1316,6 +1340,43 @@ export type Sorter = { field: string; direction: 'ascend' | 'descend' };
 export type Sorters = { [field: string]: 'ascend' | 'descend' };
 
 export type Filters = Record<string, string[]>;
+export declare type VirtualItemKey = string | number;
+export interface InternalDataItem {
+  key: VirtualItemKey;
+  index: number;
+  item: unknown;
+}
+export declare type ItemSlot = (props: {
+  item: unknown;
+  index: number;
+}) => VNode[];
+export interface ScrollIntoViewOptions {
+  index?: number;
+  key?: VirtualItemKey;
+  align: 'auto' | 'top' | 'bottom';
+}
+export interface VirtualListProps {
+  height?: number | string;
+  threshold?: number;
+  isStaticItemHeight?: boolean;
+  fixedSize?: boolean;
+  estimatedSize?: number;
+  buffer?: number;
+  data?: unknown[];
+  itemKey?: string | ((item: unknown) => VirtualItemKey);
+  component?: keyof HTMLElementTagNameMap;
+}
+export declare type ScrollOptions =
+  | number
+  | {
+    index?: number;
+    key?: VirtualItemKey;
+    align?: 'auto' | 'top' | 'bottom';
+  };
+export interface VirtualListRef {
+  scrollTo: (options: ScrollOptions) => void;
+}
+
 export type TriggerPopupTranslate =
   | [number, number]
   | { [key in TriggerPosition]?: [number, number] };

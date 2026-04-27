@@ -1,8 +1,6 @@
 import { Data } from './types';
 import { isArray, isObject } from './is';
 
-const pathCache = new Map<string, string[]>();
-
 export const getValueByPath = <T = any>(
   obj: Data | undefined,
   path: string | undefined
@@ -15,17 +13,9 @@ export const getValueByPath = <T = any>(
   if (path.indexOf('.') === -1 && path.indexOf('[') === -1) {
     return obj[path] as T;
   }
-
-  let keys = pathCache.get(path);
-  if (!keys) {
-    keys = path.replace(/\[(\w+)\]/g, '.$1').split('.');
-    pathCache.set(path, keys);
-    // 限制缓存大小，防止内存泄漏
-    if (pathCache.size > 1000) {
-      pathCache.clear();
-    }
-  }
-
+  const pathReg = /\[(\w+)\]/g;
+  path = path.replace(pathReg, '.$1');
+  const keys = path.split('.');
   if (keys.length === 0) {
     return undefined;
   }

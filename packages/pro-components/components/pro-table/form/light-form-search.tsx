@@ -81,7 +81,6 @@ export default defineComponent({
       columnsList,
       lightFormRef,
       onSubmitClick,
-      onReset,
       handleReset,
     } = useLightFormSearchState({ props, emit, searchConfig });
     const searchName = computed(() => searchConfigState.value.name || 'keyword');
