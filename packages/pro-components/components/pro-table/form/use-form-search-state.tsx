@@ -10,6 +10,7 @@ import {
   watchEffect,
 } from 'vue';
 import type { SearchConfig } from '../interface';
+import { deepClone } from '../utils';
 import { omit } from '../../_utils/omit';
 import ResponsiveObserve, { ScreenMap } from '../../_utils/responsive-observe';
 
@@ -54,6 +55,7 @@ export const useFormSearchState = ({
 
   const inlineCollapsedLimit = ref(resolveInlineLimit());
   const gridCollapsedLimit = ref(resolveGridLimit());
+  const resetKey = ref(0);
   let responsiveToken = '';
 
   const formModel = ref<{ [propName: string]: any }>(
@@ -65,7 +67,38 @@ export const useFormSearchState = ({
     emit('reset', formModel.value);
   };
   const onReset = () => {
-    formSearchRef.value?.resetFields();
+    formSearchRef.value?.clearValidate();
+
+    const defaults = defaultFormData.value || {};
+    const nextModel = { ...defaults } as Record<string, any>;
+
+    columnsList.value.forEach((item) => {
+      if (!item.dataIndex) {
+        return;
+      }
+      const key = item.dataIndex as string;
+      const valueType =
+        typeof item.valueType === 'function' ? item.valueType({}) : item.valueType;
+
+      if (valueType === 'date' || valueType === 'dateTime' || valueType === 'time') {
+        nextModel[key] = null;
+        return;
+      }
+
+      const defaultVal = defaults[key];
+      if (defaultVal !== undefined) {
+        nextModel[key] = deepClone(defaultVal);
+        return;
+      }
+      if (valueType === 'dateRange' || valueType === 'dateTimeRange') {
+        nextModel[key] = [];
+        return;
+      }
+      nextModel[key] = undefined;
+    });
+
+    formModel.value = nextModel;
+    resetKey.value += 1;
     handleReset();
   };
   const onSubmit = async () => {
@@ -248,6 +281,7 @@ export const useFormSearchState = ({
     gridCollapsedLimit,
     columnsList,
     gridKey,
+    resetKey,
     gridProps,
     formProps,
     onSubmit,
