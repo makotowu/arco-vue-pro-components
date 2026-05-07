@@ -1,16 +1,16 @@
 import {
   computed,
+  CSSProperties,
   onMounted,
-  onUnmounted,
   ref,
   toRef,
-  watch,
   watchEffect,
 } from 'vue';
 import { IconDown } from '@arco-design/web-vue/es/icon';
 import type { SearchConfig } from '../interface';
 import { omit } from '../../_utils/omit';
-import ResponsiveObserve, { ScreenMap } from '../../_utils/responsive-observe';
+import { genColumnKey } from '../utils';
+import { GridItemProps, GridProps } from '@arco-design/web-vue';
 
 export const useFormSearchState = ({
   props,
@@ -61,6 +61,7 @@ export const useFormSearchState = ({
         </>
       );
     },
+    gridSuffixType: 'column',
   };
   const searchConfig = computed((): SearchConfig => {
     return Object.assign(defaultSearchConfig, props.search) as SearchConfig;
@@ -71,31 +72,6 @@ export const useFormSearchState = ({
       searchConfig.value.layout || (isForm.value ? 'vertical' : 'horizontal')
     );
   });
-
-  const resolveInlineLimit = (screens?: ScreenMap) => {
-    const current = screens || {};
-    if (current.xxl) return 5;
-    if (current.xl) return 4;
-    if (current.lg || current.md) return 3;
-    if (current.sm) return 2;
-    return 0;
-  };
-
-  const resolveGridLimit = (screens?: ScreenMap) => {
-    const current = screens || {};
-    if (resolvedLayout.value === 'vertical') {
-      if (current.xxl || current.xl || current.lg || current.md || current.sm)
-        return 1;
-      return 0;
-    }
-    if (current.xxl || current.xl || current.lg || current.md) return 2;
-    if (current.sm) return 1;
-    return 0;
-  };
-
-  const inlineCollapsedLimit = ref(resolveInlineLimit());
-  const gridCollapsedLimit = ref(resolveGridLimit());
-  let responsiveToken = '';
 
   const formModel = ref<{ [propName: string]: any }>(
     props.defaultFormData || {}
@@ -120,74 +96,10 @@ export const useFormSearchState = ({
     return formModel.value;
   }
 
-  const startObserve = () => {
-    if (responsiveToken) {
-      return;
-    }
-    if (typeof window === 'undefined' || !window.matchMedia) {
-      inlineCollapsedLimit.value = resolveInlineLimit();
-      gridCollapsedLimit.value = resolveGridLimit();
-      return;
-    }
-    try {
-      responsiveToken = ResponsiveObserve.subscribe((screens) => {
-        const nextLimit = resolveInlineLimit(screens);
-        if (inlineCollapsedLimit.value !== nextLimit) {
-          inlineCollapsedLimit.value = nextLimit;
-        }
-        const nextGridLimit = resolveGridLimit(screens);
-        if (gridCollapsedLimit.value !== nextGridLimit) {
-          gridCollapsedLimit.value = nextGridLimit;
-        }
-      });
-    } catch (error) {
-      inlineCollapsedLimit.value = resolveInlineLimit();
-      gridCollapsedLimit.value = resolveGridLimit();
-      responsiveToken = '';
-    }
-  };
-
-  const stopObserve = () => {
-    if (responsiveToken) {
-      ResponsiveObserve.unsubscribe(responsiveToken);
-      responsiveToken = '';
-    }
-  };
-
-  const shouldObserve = computed(() => {
-    if (resolvedLayout.value === 'inline') {
-      return true;
-    }
-    if (!isForm.value && resolvedLayout.value === 'horizontal') {
-      return true;
-    }
-    return false;
-  });
-
-  watch(resolvedLayout, () => {
-    gridCollapsedLimit.value = resolveGridLimit();
-  });
-
   onMounted(() => {
-    if (shouldObserve.value) {
-      startObserve();
-    }
-
     if (props.type === 'table') {
       emit('submit', defaultFormData.value, true);
     }
-  });
-
-  watch(shouldObserve, (next) => {
-    if (next) {
-      startObserve();
-      return;
-    }
-    stopObserve();
-  });
-
-  onUnmounted(() => {
-    stopObserve();
   });
 
   watchEffect(() => {
@@ -199,8 +111,16 @@ export const useFormSearchState = ({
     }
   });
 
+  // 支持 function 的 title
+  const getTitle = (item) => {
+    if (item.title && typeof item.title === 'function') {
+      return item.title(item, 'form');
+    }
+    return item.title;
+  };
+
   const columnsList = computed(() => {
-    return (
+    const list =
       columns.value
         .filter((item) => {
           if (item.hideInSearch && props.type !== 'form') {
@@ -228,19 +148,41 @@ export const useFormSearchState = ({
             return 1;
           }
           return 0;
-        }) || []
-    );
+        }) || [];
+    return list.map((item, index) => {
+      const key = genColumnKey(item.key || item.dataIndex?.toString(), index);
+      const title = getTitle(item);
+      const valueType =
+        typeof item.valueType === 'function'
+          ? item.valueType({})
+          : item.valueType;
+      const hidden = valueType === 'hidden';
+      let formItemProps =
+        typeof item.formItemProps === 'function'
+          ? item.formItemProps({ formModel, item, type: props.type })
+          : item.formItemProps;
+      formItemProps = isForm.value
+        ? formItemProps
+        : omit(formItemProps, [
+            'rules',
+            'disabled',
+            'required',
+            'validateStatus',
+            'validateTrigger',
+          ]);
+      const gridItemProps = item.girdItemProps || {};
+      return {
+        ...item,
+        key,
+        label: !hidden && typeof title === 'string' ? title : undefined,
+        title,
+        valueType,
+        hidden,
+        formItemProps,
+        gridItemProps,
+      };
+    });
   });
-
-  const gridKey = ref(Date.now());
-  watch(
-    () => columnsList.value.map((item) => item.key || item.dataIndex).join(','),
-    (newKeys, oldKeys) => {
-      if (newKeys !== oldKeys) {
-        gridKey.value = Date.now();
-      }
-    }
-  );
 
   const handleSubmit = ({
     values,
@@ -255,21 +197,32 @@ export const useFormSearchState = ({
   };
 
   const gridProps = computed(() => {
-    if (searchConfig.value.layout === 'vertical') {
-      return {
-        cols: 1,
-        collapsed: collapsed.value,
-      };
+    let grid: GridProps =
+      props.type === 'form'
+        ? {
+            cols: 1,
+            collapsed: false,
+          }
+        : {
+            cols: { xs: 1, sm: 2, md: 3 },
+            collapsed: collapsed.value,
+          };
+    switch (searchConfig.value.layout) {
+      case 'vertical':
+        grid.colGap = 20;
+        break;
+      case 'inline':
+        grid.rowGap = 12;
+        grid.colGap = 20;
+        grid.cols = { xs: 1, sm: 2, md: 3, lg: 3, xl: 4, xxl: 5 };
+        break;
     }
-    return props.type === 'form'
-      ? {
-          cols: 1,
-          collapsed: false,
-        }
-      : {
-          cols: { xs: 1, sm: 2, md: 3 },
-          collapsed: collapsed.value,
-        };
+    return {
+      ...grid,
+      ...(props.search && props.search !== true
+        ? props.search.gridProps
+        : undefined),
+    };
   });
   const formProps = computed(() => {
     const data =
@@ -279,21 +232,61 @@ export const useFormSearchState = ({
     return isForm.value ? data : omit(data || {}, ['rules', 'disabled']);
   });
 
+  const gridSuffixProps = computed(() => {
+    let suffixProps: GridItemProps & { style?: CSSProperties } = {};
+    switch (searchConfig.value.gridSuffixType) {
+      case 'rowLeft':
+        suffixProps = {
+          span: 24,
+          suffix: false,
+          style: {
+            'text-align': 'left',
+            'display': 'block !important',
+          },
+        };
+        break;
+      case 'rowRight':
+        suffixProps = {
+          span: 24,
+          suffix: false,
+          style: {
+            'text-align': 'right',
+            'display': 'block !important',
+          },
+        };
+        break;
+      default:
+        suffixProps = {
+          span: 1,
+          suffix: true,
+          style: { 'text-align': 'right' },
+        };
+        break;
+    }
+    return {
+      ...suffixProps,
+      style: [
+        suffixProps.style,
+        !isForm.value ? { 'margin-bottom': '20px', 'align-self': 'end' } : {},
+      ],
+      ...props.gridSuffixProps,
+    };
+  });
+
   return {
     searchConfig,
     isForm,
     formSearchRef,
     formModel,
     collapsed,
-    inlineCollapsedLimit,
-    gridCollapsedLimit,
     columnsList,
-    gridKey,
     gridProps,
     formProps,
     onSubmit,
     onReset,
     handleReset,
     handleSubmit,
+    resolvedLayout,
+    gridSuffixProps,
   };
 };

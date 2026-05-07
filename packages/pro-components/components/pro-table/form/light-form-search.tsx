@@ -83,7 +83,9 @@ export default defineComponent({
       onSubmitClick,
       handleReset,
     } = useLightFormSearchState({ props, emit, searchConfig });
-    const searchName = computed(() => searchConfigState.value.name || 'keyword');
+    const searchName = computed(
+      () => searchConfigState.value.name || 'keyword'
+    );
     const rowNumber = computed(() => searchConfigState.value.rowNumber ?? 2);
 
     const renderPowerContent = () => {
@@ -105,22 +107,13 @@ export default defineComponent({
                       },
                     }}
                   >
-                    {cloneVNode(
-                      renderFormInput(
-                        item,
-                        props.type,
-                        formModel,
-                        lightFormRef,
-                        slots,
-                        t
-                      ),
-                      {
-                        'modelValue': formModel.value[item.dataIndex],
-                        'onUpdate:modelValue': (value: any) => {
-                          // 更新表单数据
-                          formModel.value[item.dataIndex] = value;
-                        },
-                      }
+                    {renderFormInput(
+                      item,
+                      props.type,
+                      formModel,
+                      lightFormRef,
+                      slots,
+                      t
                     )}
                   </FormItem>
                 );
@@ -225,8 +218,7 @@ export default defineComponent({
                       </div>
                     );
                   })}
-              {columnsList.value.length <=
-              rowNumber.value ? null : (
+              {columnsList.value.length <= rowNumber.value ? null : (
                 <Popover
                   popupVisible={visible.value}
                   trigger="click"

@@ -183,7 +183,7 @@ export interface ProColumns
    * @zh 渲染查询表单的输入组件
    * @en Render the input component of the query form
    */
-  renderFormItem?: (data: RenderFormItemData) => VNodeTypes;
+  renderFormItem?: (data: RenderFormItemData) => VNode;
   /**
    * @zh 在查询表单中不展示此项
    * @en This item is not displayed in the query form
@@ -951,6 +951,16 @@ export interface SearchConfig {
    * @en Form layout
    */
   layout?: 'horizontal' | 'vertical' | 'inline';
+  /**
+   * @zh 表单后缀元素（重置、查询、展开按钮）显示类型column:占一列|rowLeft:占一行(在左边)|rowRight: 占一行(在右边)，默认：column
+   * @en Form suffix element (reset, query, collapse button) display type, column: one column|rowLeft: one row (on the left)|rowRight: one row (on the right), default: column
+   */
+  gridSuffixType?: 'column' | 'rowLeft' | 'rowRight';
+  /**
+   * @zh 表单后缀元素（重置、查询、展开按钮）props
+   * @en Form suffix element (reset, query, collapse button) props
+   */
+  gridSuffixProps?: GridItemProps;
   /**
    * @zh 设置表单Grid props
    * @en Set the Grid props for the form

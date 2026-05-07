@@ -91,15 +91,16 @@ export const useLightFormSearchState = ({
     }
   );
 
+  const getTitle = (item) => {
+    if (item.title && typeof item.title === 'function') {
+      return item.title(item, 'form');
+    }
+    return item.title;
+  };
+
   const getFormItemInfo = (item: ProColumns, index: number) => {
     const key = genColumnKey(item.key || item.dataIndex?.toString(), index);
-    const getTitle = () => {
-      if (item.title && typeof item.title === 'function') {
-        return item.title(item, 'form');
-      }
-      return item.title;
-    };
-    const title = getTitle();
+    const title = getTitle(item);
     return { title, key };
   };
   const columnsList = ref<any[]>([]);

@@ -183,18 +183,6 @@ export default defineComponent({
         selectedKeys.value,
         expandedKeys.value
       );
-      const allProps = { ...props, ...attrs };
-      const { search, searchLayout } = allProps as any;
-      let searchConfig = search;
-
-      if (search !== false && searchLayout) {
-        const baseConfig =
-          typeof search === 'object' && search !== null ? search : {};
-        searchConfig = {
-          ...baseConfig,
-          layout: searchLayout,
-        };
-      }
 
       return (
         <div>
@@ -245,8 +233,8 @@ export default defineComponent({
                 </Link>
               );
             }}
-            {...allProps}
-            search={searchConfig}
+            {...attrs}
+            {...props}
           />
           <Modal
             titleAlign="start"

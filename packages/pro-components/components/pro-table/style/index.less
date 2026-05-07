@@ -2,6 +2,7 @@
 @pro-table-prefix-cls: ~'@{prefix}-pro-table';
 @pro-table-light-prefix-cls: ~'@{prefix}-pro-table-light';
 @pro-table-alert-prefix-cls: ~'@{prefix}-pro-table-alert';
+@pro-table-table-grid-prefix-cls: ~'@{prefix}-pro-table-table-grid';
 .@{pro-table-prefix-cls} {
   &:fullscreen {
     min-height: 100vh;
@@ -145,6 +146,11 @@
         white-space: nowrap;
       }
     }
+  }
+}
+.@{pro-table-table-grid-prefix-cls} {
+  .arco-form-item-layout-inline {
+    margin-right: 0 !important;
   }
 }
 .@{pro-table-light-prefix-cls} {

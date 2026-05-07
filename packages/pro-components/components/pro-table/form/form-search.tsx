@@ -1,9 +1,4 @@
-import {
-  PropType,
-  defineComponent,
-  Ref,
-  cloneVNode,
-} from 'vue';
+import { PropType, defineComponent, Ref, cloneVNode } from 'vue';
 import {
   Form,
   Grid,
@@ -31,15 +26,9 @@ import type {
   SearchConfig,
   FormOptionProps,
 } from '../interface';
-import {
-  ObjToMap,
-  genColumnKey,
-  parsingValueEnumToArray,
-  runFunction,
-} from '../utils';
+import { ObjToMap, parsingValueEnumToArray, runFunction } from '../utils';
 import { getPrefixCls } from '../../_utils';
 import { ProInputNumberType } from '../../pro-input-number';
-import { omit } from '../../_utils/omit';
 import { useFormSearchState } from './use-form-search-state';
 
 const inputDecimalTypes = ['digit', 'decimal', 'money', 'percent'];
@@ -58,10 +47,22 @@ export const renderFormInput = (
     type,
   };
   if (item.renderFormItem) {
-    return item.renderFormItem(data);
+    return cloneVNode(item.renderFormItem(data), {
+      'modelValue': formModel.value[item.dataIndex],
+      'onUpdate:modelValue': (value: any) => {
+        // 更新表单数据
+        formModel.value[item.dataIndex] = value;
+      },
+    });
   }
   if (item.formSlotName && slots?.[item.formSlotName]) {
-    return slots[item.formSlotName]?.(data)[0];
+    return cloneVNode(slots[item.formSlotName]?.(data)[0], {
+      'modelValue': formModel.value[item.dataIndex],
+      'onUpdate:modelValue': (value: any) => {
+        // 更新表单数据
+        formModel.value[item.dataIndex] = value;
+      },
+    });
   }
   const valueType =
     typeof item.valueType === 'function' ? item.valueType({}) : item.valueType;
@@ -87,6 +88,7 @@ export const renderFormInput = (
           options={options}
           placeholder={t('tableForm.selectPlaceholder')}
           {...item.fieldProps}
+          v-model={formModel.value[item.dataIndex]}
         />
       );
     }
@@ -95,6 +97,7 @@ export const renderFormInput = (
         placeholder={t('tableForm.inputPlaceholder')}
         allowClear
         {...item.fieldProps}
+        v-model={formModel.value[item.dataIndex]}
       />
     );
   }
@@ -108,6 +111,7 @@ export const renderFormInput = (
         placeholder={t('tableForm.selectPlaceholder')}
         options={options}
         {...item.fieldProps}
+        v-model={formModel.value[item.dataIndex]}
       />
     );
   }
@@ -119,6 +123,7 @@ export const renderFormInput = (
           width: '100%',
         }}
         {...item.fieldProps}
+        v-model={formModel.value[item.dataIndex]}
       />
     );
   }
@@ -132,6 +137,7 @@ export const renderFormInput = (
           width: '100%',
         }}
         {...item.fieldProps}
+        v-model={formModel.value[item.dataIndex]}
       />
     );
   }
@@ -143,6 +149,7 @@ export const renderFormInput = (
           width: '100%',
         }}
         {...item.fieldProps}
+        v-model={formModel.value[item.dataIndex]}
       />
     );
   }
@@ -154,6 +161,7 @@ export const renderFormInput = (
           width: '100%',
         }}
         {...item.fieldProps}
+        v-model={formModel.value[item.dataIndex]}
       />
     );
   }
@@ -165,6 +173,7 @@ export const renderFormInput = (
           width: '100%',
         }}
         {...item.fieldProps}
+        v-model={formModel.value[item.dataIndex]}
       />
     );
   }
@@ -173,11 +182,18 @@ export const renderFormInput = (
       <Textarea
         placeholder={t('tableForm.inputPlaceholder')}
         {...item.fieldProps}
+        v-model={formModel.value[item.dataIndex]}
       />
     );
   }
   if (valueType === 'checkbox') {
-    return <CheckboxGroup options={options} {...item.fieldProps} />;
+    return (
+      <CheckboxGroup
+        options={options}
+        {...item.fieldProps}
+        v-model={formModel.value[item.dataIndex]}
+      />
+    );
   }
 
   if (valueType === 'radio' || valueType === 'radioButton') {
@@ -186,20 +202,36 @@ export const renderFormInput = (
         type={valueType === 'radioButton' ? 'button' : 'radio'}
         options={options}
         {...item.fieldProps}
+        v-model={formModel.value[item.dataIndex]}
       />
     );
   }
   if (valueType === 'switch') {
-    return <Switch checkedValue={0} uncheckedValue={1} {...item.fieldProps} />;
+    return (
+      <Switch
+        checkedValue={0}
+        uncheckedValue={1}
+        {...item.fieldProps}
+        v-model={formModel.value[item.dataIndex]}
+      />
+    );
   }
   if (valueType === 'uploadFile') {
-    return <Upload action="/" {...item.fieldProps} multiple={false} />;
+    return (
+      <Upload
+        action="/"
+        {...item.fieldProps}
+        multiple={false}
+        v-model={formModel.value[item.dataIndex]}
+      />
+    );
   }
   if (typeof valueType === 'string' && inputDecimalTypes.includes(valueType)) {
     return (
       <ProInputNumber
         type={valueType as ProInputNumberType}
         {...item.fieldProps}
+        v-model={formModel.value[item.dataIndex]}
       />
     );
   }
@@ -208,6 +240,7 @@ export const renderFormInput = (
       placeholder={t('tableForm.inputPlaceholder')}
       allowClear
       {...item.fieldProps}
+      v-model={formModel.value[item.dataIndex]}
     />
   );
 };
@@ -243,7 +276,7 @@ export default defineComponent({
     reset: (formData?: Record<string, unknown>) => true,
     cancel: () => true,
   },
-  setup(props, { slots, attrs, emit }) {
+  setup(props, { slots, emit }) {
     const { t } = useI18n();
     const prefixCls = getPrefixCls('pro-table');
     const {
@@ -253,96 +286,52 @@ export default defineComponent({
       formModel,
       collapsed,
       columnsList,
-      gridKey,
       gridProps,
       formProps,
       onSubmit,
       onReset,
       handleReset,
       handleSubmit,
+      resolvedLayout,
+      gridSuffixProps,
     } = useFormSearchState({ props, emit, t });
+
     const renderGridFormItems = () => {
       return (
-        <Grid
-          {...gridProps.value}
-          {...(props.search && props.search !== true
-            ? props.search.gridProps
-            : undefined)}
-          key={gridKey.value}
-        >
-          {columnsList.value.map((item, index) => {
-            const key = genColumnKey(
-              item.key || item.dataIndex?.toString(),
-              index
-            );
-            // 支持 function 的 title
-            const getTitle = () => {
-              if (item.title && typeof item.title === 'function') {
-                return item.title(item, 'form');
-              }
-              return item.title;
-            };
-            const title = getTitle();
-            const valueType =
-              typeof item.valueType === 'function'
-                ? item.valueType({})
-                : item.valueType;
-            const hidden = valueType === 'hidden';
-            const formItemProps =
-              typeof item.formItemProps === 'function'
-                ? item.formItemProps({ formModel, item, type: props.type })
-                : item.formItemProps;
-            const gridItemProps = item.girdItemProps || {};
+        <Grid {...gridProps.value} class={`${prefixCls}-${props.type}-grid`}>
+          {columnsList.value.map((item) => {
             return (
-              <GridItem key={key} hidden={hidden} suffix={false} {...gridItemProps}>
+              <GridItem
+                key={item.key}
+                hidden={item.hidden}
+                suffix={false}
+                {...item.gridItemProps}
+              >
                 <FormItem
-                  {...(isForm.value
-                    ? formItemProps
-                    : omit(formItemProps, [
-                        'rules',
-                        'disabled',
-                        'required',
-                        'validateStatus',
-                        'validateTrigger',
-                      ]))}
+                  {...item.formItemProps}
                   field={item.dataIndex}
-                  label={
-                    !hidden && typeof title === 'string' ? title : undefined
-                  }
+                  label={item.label}
                   v-slots={{
                     label: () => {
-                      return hidden ? '' : title;
+                      return item.hidden ? '' : item.title;
                     },
                   }}
                 >
-                  {cloneVNode(
-                    renderFormInput(
-                      item,
-                      props.type,
-                      formModel,
-                      formSearchRef,
-                      slots,
-                      t
-                    ),
-                    {
-                      'modelValue': formModel.value[item.dataIndex],
-                      'onUpdate:modelValue': (value: any) => {
-                        // 更新表单数据
-                        formModel.value[item.dataIndex] = value;
-                      },
-                    }
+                  {renderFormInput(
+                    item,
+                    props.type,
+                    formModel,
+                    formSearchRef,
+                    slots,
+                    t
                   )}
                 </FormItem>
               </GridItem>
             );
           })}
           <GridItem
-            span={1}
-            suffix
-            style={[
-              { 'text-align': 'right' },
-              !isForm.value ? { 'margin-bottom': '20px' } : {},
-            ]}
+            class={`${prefixCls}-suffix ${prefixCls}-suffix-${resolvedLayout.value}`}
+            {...gridSuffixProps.value}
             v-slots={{
               default: ({ overflow }: { overflow: boolean }) => {
                 return renderFormOption(collapsed.value ? overflow : true);
@@ -409,10 +398,7 @@ export default defineComponent({
     };
     const render = () => (
       <Form
-        layout={
-          searchConfig.value.layout ||
-          (isForm.value ? 'vertical' : 'horizontal')
-        }
+        layout={resolvedLayout.value}
         {...formProps.value}
         model={formModel.value}
         ref={formSearchRef}

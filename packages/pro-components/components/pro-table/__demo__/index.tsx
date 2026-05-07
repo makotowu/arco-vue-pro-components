@@ -144,7 +144,7 @@ export const BasicDemo = {
       },
     },
     searchLayout: {
-      description: '搜索表单布局方式',
+      description: '搜索表单布局方式search.layout',
       table: {
         type: { summary: 'horizontal|vertical|inline' },
         defaultValue: {
@@ -154,6 +154,19 @@ export const BasicDemo = {
       if: { arg: 'searchType', eq: '普通表格' },
       control: 'inline-radio',
       options: ['horizontal', 'vertical', 'inline'],
+    },
+    searchGridSuffixType: {
+      description:
+        '搜索表单后缀元素（重置、查询、展开按钮）显示类型search.gridSuffixType',
+      table: {
+        type: { summary: 'column|rowLeft|rowRight' },
+        defaultValue: {
+          summary: 'column',
+        },
+      },
+      if: { arg: 'searchType', eq: '普通表格' },
+      control: 'inline-radio',
+      options: ['column', 'rowLeft', 'rowRight'],
     },
     lightSearchConfig: {
       description: `是否显示表格的搜索表单或配置搜索表单, lightSearchConfig: { rowNumber: 2, name: 'keyword', search: true, clearToSearch: false } rowNumber:设置右侧直接搜索表单项显示几个： 默认是2个，其他表单项在高级筛选弹框里面,name: 设置左侧文本框名称(传值给后台的字段)，默认：keyword,search:传给左侧文本搜索框props，左侧文本搜索框为false不显示,clearToSearch:设置左侧文本搜索框清空时，为true时候，立即搜索数据`,
@@ -219,6 +232,7 @@ export const BasicDemo = {
   args: {
     search: true,
     searchLayout: 'horizontal',
+    searchGridSuffixType: 'column',
     searchType: '普通表格',
     lightSearchConfig: { rowNumber: 2, name: 'keyword', search: true },
     toolBarRender: '显示已配置的',
@@ -232,6 +246,7 @@ export const BasicDemo = {
         options: { fullScreen: true },
         toolBarRender: undefined,
         searchType: 'query',
+        search: true,
       });
       if (args.options) {
         if (args.options.includes('不显示')) {
@@ -268,8 +283,12 @@ export const BasicDemo = {
       }
       props.searchType = args.searchType === '普通表格' ? 'query' : 'light';
       if (args.search) {
-        const searchConfig = args.search === true ? {} : args.search || {};
-        props.search = { ...searchConfig, layout: args.searchLayout };
+        props.search = {
+          layout: args.searchLayout,
+          gridSuffixType: args.searchGridSuffixType,
+        };
+      } else {
+        props.search = false;
       }
       return () => <Basic {...args} {...props} />;
     },
