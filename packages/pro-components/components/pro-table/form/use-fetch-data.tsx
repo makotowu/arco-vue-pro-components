@@ -94,9 +94,7 @@ const useFetchData = <T extends RequestData<any>>(
       }
     } finally {
       if (mounted.value) {
-        requestAnimationFrame(() => {
-          setLoading(false);
-        });
+        setLoading(false);
       }
     }
     return [];
@@ -129,7 +127,6 @@ const useFetchData = <T extends RequestData<any>>(
     },
     {
       immediate: true,
-      deep: true,
     }
   );
 

@@ -32,6 +32,8 @@ import { ProInputNumberType } from '../../pro-input-number';
 import { useFormSearchState } from './use-form-search-state';
 
 const inputDecimalTypes = ['digit', 'decimal', 'money', 'percent'];
+const fullWidthStyle = { width: '100%' };
+
 export const renderFormInput = (
   item: ProColumns,
   type: ProTableTypes,
@@ -81,9 +83,7 @@ export const renderFormInput = (
     if (valueEnum) {
       return (
         <ProSelect
-          style={{
-            width: '100%',
-          }}
+          style={fullWidthStyle}
           columnKey={item.key}
           options={options}
           placeholder={t('tableForm.selectPlaceholder')}
@@ -104,9 +104,7 @@ export const renderFormInput = (
   if (valueType === 'select') {
     return (
       <ProSelect
-        style={{
-          width: '100%',
-        }}
+        style={fullWidthStyle}
         columnKey={item.key}
         placeholder={t('tableForm.selectPlaceholder')}
         options={options}
@@ -119,9 +117,7 @@ export const renderFormInput = (
     return (
       <DatePicker
         format="YYYY-MM-DD"
-        style={{
-          width: '100%',
-        }}
+        style={fullWidthStyle}
         {...item.fieldProps}
         v-model={formModel.value[item.dataIndex]}
       />
@@ -133,9 +129,7 @@ export const renderFormInput = (
       <DatePicker
         showTime
         format="YYYY-MM-DD HH:mm:ss"
-        style={{
-          width: '100%',
-        }}
+        style={fullWidthStyle}
         {...item.fieldProps}
         v-model={formModel.value[item.dataIndex]}
       />
@@ -145,9 +139,7 @@ export const renderFormInput = (
   if (valueType === 'dateRange') {
     return (
       <RangePicker
-        style={{
-          width: '100%',
-        }}
+        style={fullWidthStyle}
         {...item.fieldProps}
         v-model={formModel.value[item.dataIndex]}
       />
@@ -157,9 +149,7 @@ export const renderFormInput = (
     return (
       <RangePicker
         showTime
-        style={{
-          width: '100%',
-        }}
+        style={fullWidthStyle}
         {...item.fieldProps}
         v-model={formModel.value[item.dataIndex]}
       />
@@ -169,9 +159,7 @@ export const renderFormInput = (
   if (valueType === 'time') {
     return (
       <TimePicker
-        style={{
-          width: '100%',
-        }}
+        style={fullWidthStyle}
         {...item.fieldProps}
         v-model={formModel.value[item.dataIndex]}
       />

@@ -1,16 +1,24 @@
 import {
   computed,
   CSSProperties,
+  nextTick,
   onMounted,
   ref,
+  shallowRef,
   toRef,
-  watchEffect,
+  watch,
 } from 'vue';
 import { IconDown } from '@arco-design/web-vue/es/icon';
 import type { SearchConfig } from '../interface';
 import { omit } from '../../_utils/omit';
 import { genColumnKey } from '../utils';
 import { GridItemProps, GridProps } from '@arco-design/web-vue';
+
+const collapsedIconBaseStyle = {
+  fontSize: '16px',
+  marginLeft: '8px',
+  transition: '0.3s all',
+};
 
 export const useFormSearchState = ({
   props,
@@ -36,10 +44,8 @@ export const useFormSearchState = ({
             {t('tableForm.collapsed')}
             <IconDown
               style={{
+                ...collapsedIconBaseStyle,
                 verticalAlign: 'middle',
-                fontSize: '16px',
-                marginLeft: '8px',
-                transition: '0.3s all',
                 transform: `rotate(${collapsed ? 0 : 0.5}turn)`,
               }}
             />
@@ -51,10 +57,8 @@ export const useFormSearchState = ({
           {t('tableForm.expand')}
           <IconDown
             style={{
+              ...collapsedIconBaseStyle,
               verticalAlign: 'baseline',
-              fontSize: '16px',
-              marginLeft: '8px',
-              transition: '0.3s all',
               transform: `rotate(${collapsed ? 0 : 0.5}turn)`,
             }}
           />
@@ -102,13 +106,15 @@ export const useFormSearchState = ({
     }
   });
 
-  watchEffect(() => {
-    if (typeof props.formRef === 'function' && formSearchRef.value) {
-      formSearchRef.value.submit = onSubmit;
-      formSearchRef.value.reset = onReset;
-      formSearchRef.value.getFieldsValues = getFieldsValues;
-      props.formRef(formSearchRef.value);
-    }
+  onMounted(() => {
+    nextTick(() => {
+      if (typeof props.formRef === 'function' && formSearchRef.value) {
+        formSearchRef.value.submit = onSubmit;
+        formSearchRef.value.reset = onReset;
+        formSearchRef.value.getFieldsValues = getFieldsValues;
+        props.formRef(formSearchRef.value);
+      }
+    });
   });
 
   // 支持 function 的 title
@@ -119,70 +125,76 @@ export const useFormSearchState = ({
     return item.title;
   };
 
-  const columnsList = computed(() => {
-    const list =
-      columns.value
-        .filter((item) => {
-          if (item.hideInSearch && props.type !== 'form') {
+  const columnsList = shallowRef<any[]>([]);
+
+  watch(
+    [columns, isForm],
+    () => {
+      const list =
+        columns.value
+          .filter((item) => {
+            if (item.hideInSearch && props.type !== 'form') {
+              return false;
+            }
+            if (props.type === 'form' && item.hideInForm) {
+              return false;
+            }
+            if (
+              !(item.valueType === 'index' || item.valueType === 'indexBorder') &&
+              (item.key || item.dataIndex)
+            ) {
+              return true;
+            }
             return false;
-          }
-          if (props.type === 'form' && item.hideInForm) {
-            return false;
-          }
-          if (
-            !(item.valueType === 'index' || item.valueType === 'indexBorder') &&
-            (item.key || item.dataIndex)
-          ) {
-            return true;
-          }
-          return false;
-        })
-        .sort((a, b) => {
-          if (a && b) {
-            return (b.order || 0) - (a.order || 0);
-          }
-          if (a && a.order) {
-            return -1;
-          }
-          if (b && b.order) {
-            return 1;
-          }
-          return 0;
-        }) || [];
-    return list.map((item, index) => {
-      const key = genColumnKey(item.key || item.dataIndex?.toString(), index);
-      const title = getTitle(item);
-      const valueType =
-        typeof item.valueType === 'function'
-          ? item.valueType({})
-          : item.valueType;
-      const hidden = valueType === 'hidden';
-      let formItemProps =
-        typeof item.formItemProps === 'function'
-          ? item.formItemProps({ formModel, item, type: props.type })
-          : item.formItemProps;
-      formItemProps = isForm.value
-        ? formItemProps
-        : omit(formItemProps, [
-            'rules',
-            'disabled',
-            'required',
-            'validateStatus',
-            'validateTrigger',
-          ]);
-      const gridItemProps = item.girdItemProps || {};
-      return {
-        ...item,
-        key,
-        label: !hidden && typeof title === 'string' ? title : undefined,
-        title,
-        valueType,
-        hidden,
-        formItemProps,
-        gridItemProps,
-      };
-    });
-  });
+          })
+          .sort((a, b) => {
+            if (a && b) {
+              return (b.order || 0) - (a.order || 0);
+            }
+            if (a && a.order) {
+              return -1;
+            }
+            if (b && b.order) {
+              return 1;
+            }
+            return 0;
+          }) || [];
+      columnsList.value = list.map((item, index) => {
+        const key = genColumnKey(item.key || item.dataIndex?.toString(), index);
+        const title = getTitle(item);
+        const valueType =
+          typeof item.valueType === 'function'
+            ? item.valueType({})
+            : item.valueType;
+        const hidden = valueType === 'hidden';
+        let formItemProps =
+          typeof item.formItemProps === 'function'
+            ? item.formItemProps({ formModel, item, type: props.type })
+            : item.formItemProps;
+        formItemProps = isForm.value
+          ? formItemProps
+          : omit(formItemProps, [
+              'rules',
+              'disabled',
+              'required',
+              'validateStatus',
+              'validateTrigger',
+            ]);
+        const gridItemProps = item.girdItemProps || {};
+        return {
+          ...item,
+          key,
+          label: !hidden && typeof title === 'string' ? title : undefined,
+          title,
+          valueType,
+          hidden,
+          formItemProps,
+          gridItemProps,
+        };
+      });
+    },
+    { immediate: true }
+  );
 
   const handleSubmit = ({
     values,

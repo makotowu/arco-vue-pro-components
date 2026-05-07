@@ -322,7 +322,7 @@ export default defineComponent({
      * @en Table row selector configuration
      */
     rowSelection: {
-      type: Object as PropType<TableRowSelection>,
+      type: Object as PropType<TableRowSelection & Record<string, any>>,
     },
     /**
      * @zh 表格的展开行配置
@@ -886,6 +886,7 @@ export default defineComponent({
       type,
       columnEmptyText,
       dataCache,
+      virtualListProps: rawVirtualListProps,
     } = toRefs(props);
     const tableSize = usePureProp(props, 'size');
     const columnsState = toRef(props, 'columnsState');
@@ -1054,7 +1055,7 @@ export default defineComponent({
     provide(
       proTableInjectionKey,
       reactive({
-        tableSize: tableSize,
+        tableSize,
         setTableSize,
         columns: tableColumns,
         action: actionRef,
@@ -1072,7 +1073,25 @@ export default defineComponent({
         props.actionRef(actionRef.value);
       }
     });
+
+    const useVirtualScroll = computed(() => !!rawVirtualListProps.value);
+
+    const mergedVirtualListProps = computed(() => {
+      if (!useVirtualScroll.value) return undefined;
+      const config = rawVirtualListProps.value || {};
+      const scrollY = props.scroll?.y;
+      return {
+        height: config.height || scrollY || 400,
+        threshold: config.threshold ?? 20,
+        isStaticItemHeight: config.isStaticItemHeight ?? true,
+        estimatedSize: config.estimatedSize ?? 40,
+        buffer: config.buffer ?? 10,
+        ...config,
+      };
+    });
+
     const pagination = computed(() => {
+      if (useVirtualScroll.value) return false;
       return (
         props.pagination !== false &&
         mergePagination<any[]>(
@@ -1191,6 +1210,7 @@ export default defineComponent({
                 ref={tableRef}
                 {...props}
                 {...attrs}
+                virtualListProps={mergedVirtualListProps.value}
                 size={tableSize.value}
                 columns={processedColumns.value}
                 loading={props.loading || action.loading.value}

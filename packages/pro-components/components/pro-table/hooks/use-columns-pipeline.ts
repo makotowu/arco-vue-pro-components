@@ -1,4 +1,4 @@
-import { Ref, computed, ref, watch, onBeforeUnmount } from 'vue';
+import { Ref, ref, shallowRef, watch, onBeforeUnmount } from 'vue';
 import { debounce } from 'lodash';
 import type {
   ActionType,
@@ -42,74 +42,50 @@ export const useColumnsPipeline = (params: {
     columnsMap.value = data;
   };
 
-  const tableColumnsInner = computed(() => {
-    return genProColumnToColumn({
-      columns: params.columns.value,
-      type: params.type.value,
-      columnEmptyText: params.columnEmptyText.value,
-      action: params.actionRef,
-      slots: {
-        ...params.slots,
-        index: params.renderIndex,
-      },
-    });
-  });
-
-  const columnsInner = computed(() => {
-    if (Object.keys(columnsMap.value).length === 0) {
-      return tableColumnsInner.value;
-    }
-    return loopFilter(tableColumnsInner.value, undefined, columnsMap);
-  });
-
-  const cachedTableColumns = ref<any[]>([]);
-  const cachedColumns = ref<any[]>([]);
+  const tableColumns = shallowRef<any[]>([]);
+  const processedColumns = shallowRef<any[]>([]);
 
   watch(
-    [tableColumnsInner, params.columnsCache],
-    ([nextColumns, cache]) => {
-      const config = getCacheConfig(cache);
-      if (!config.enabled) {
-        cachedTableColumns.value = nextColumns || [];
-        return;
-      }
-      const compare = config.compare || isEqual;
-      if (!compare(cachedTableColumns.value, nextColumns)) {
-        cachedTableColumns.value = nextColumns || [];
+    [
+      () => params.columns.value,
+      () => params.type.value,
+      () => params.columnEmptyText.value,
+      columnsMap,
+      params.columnsCache,
+    ],
+    () => {
+      const innerColumns = genProColumnToColumn({
+        columns: params.columns.value,
+        type: params.type.value,
+        columnEmptyText: params.columnEmptyText.value,
+        action: params.actionRef,
+        slots: {
+          ...params.slots,
+          index: params.renderIndex,
+        },
+      });
+
+      const finalColumns = Object.keys(columnsMap.value).length === 0
+        ? innerColumns
+        : loopFilter(innerColumns, undefined, columnsMap);
+
+      const cacheConfig = getCacheConfig(params.columnsCache.value);
+      const compare = cacheConfig.compare || isEqual;
+
+      if (cacheConfig.enabled) {
+        if (!compare(tableColumns.value, innerColumns)) {
+          tableColumns.value = innerColumns;
+        }
+        if (!compare(processedColumns.value, finalColumns)) {
+          processedColumns.value = finalColumns;
+        }
+      } else {
+        tableColumns.value = innerColumns;
+        processedColumns.value = finalColumns;
       }
     },
-    {
-      immediate: true,
-    }
+    { immediate: true }
   );
-
-  watch(
-    [columnsInner, params.columnsCache],
-    ([nextColumns, cache]) => {
-      const config = getCacheConfig(cache);
-      if (!config.enabled) {
-        cachedColumns.value = nextColumns || [];
-        return;
-      }
-      const compare = config.compare || isEqual;
-      if (!compare(cachedColumns.value, nextColumns)) {
-        cachedColumns.value = nextColumns || [];
-      }
-    },
-    {
-      immediate: true,
-    }
-  );
-
-  const tableColumns = computed(() => {
-    const config = getCacheConfig(params.columnsCache.value);
-    return config.enabled ? cachedTableColumns.value : tableColumnsInner.value;
-  });
-
-  const columns = computed(() => {
-    const config = getCacheConfig(params.columnsCache.value);
-    return config.enabled ? cachedColumns.value : columnsInner.value;
-  });
 
   const initStorageColumnsMap = () => {
     const { persistenceType, persistenceKey } = params.columnsState.value || {};
@@ -166,9 +142,6 @@ export const useColumnsPipeline = (params: {
     [params.columnsState, columnsMap],
     ([currentColumnsState, currentColumnsMap]) => {
       persistColumnsMap(currentColumnsState, currentColumnsMap);
-    },
-    {
-      deep: true,
     }
   );
 
@@ -180,6 +153,6 @@ export const useColumnsPipeline = (params: {
     columnsMap,
     setColumnsMap,
     tableColumns,
-    columns,
+    columns: processedColumns,
   };
 };

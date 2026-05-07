@@ -8,7 +8,6 @@ import {
   toRaw,
   toRef,
   watch,
-  watchEffect,
 } from 'vue';
 import { useI18n } from '../../../locale/index';
 import { isEmptyObject } from '../../_utils/is';
@@ -66,17 +65,14 @@ export const useLightFormSearchState = ({
   onMounted(() => {
     nextTick(() => {
       setFields(defaultFormData.value, lightFormRef.value);
+      if (typeof props.formRef === 'function' && lightFormRef.value) {
+        lightFormRef.value.submit = onSubmitClick;
+        lightFormRef.value.reset = onReset;
+        props.formRef(lightFormRef.value);
+      }
     });
     if (props.type === 'table') {
       emit('submit', defaultFormData.value, true);
-    }
-  });
-
-  watchEffect(() => {
-    if (typeof props.formRef === 'function' && lightFormRef.value) {
-      lightFormRef.value.submit = onSubmitClick;
-      lightFormRef.value.reset = onReset;
-      props.formRef(lightFormRef.value);
     }
   });
 
